@@ -1,0 +1,25 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { posts, dateParts } from '../../lib/posts';
+---
+<SiteLayout title="文章" active="posts" description="一些片段，也是一些日常。">
+  <header class="page-header container">
+    <span class="eyebrow">文字存档</span>
+    <h1>写下来的日子。</h1>
+    <p>有些想法很轻，把它记下来，就有了形状。</p>
+  </header>
+  <section class="archive container" aria-label="全部文章">
+    <div class="section-head"><h2 class="section-title">全部文章</h2><span class="archive-count">共 {posts.length} 篇</span></div>
+    {posts.length === 0 && <p class="empty-state">第一篇文字，还在路上。</p>}
+    {posts.map((post) => {
+      const date = dateParts(post.frontmatter.pubDate);
+      return (
+        <a class="post-row" href={post.url}>
+          <span class="post-year">{date.year}</span>
+          <div><h2>{post.frontmatter.title}</h2><p class="post-row-description">{post.frontmatter.description}</p></div>
+          <div class="post-meta"><span class="row-category">{post.frontmatter.category || '随笔'}</span><time class="post-date" datetime={date.full}>{date.day}</time><span class="row-arrow" aria-hidden="true">↗</span></div>
+        </a>
+      );
+    })}
+  </section>
+</SiteLayout>

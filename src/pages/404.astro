@@ -1,0 +1,12 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { localPath } from '../site';
+---
+<SiteLayout title="页面走丢了">
+  <section class="page-header container" style="min-height: 65vh;">
+    <span class="eyebrow">404</span>
+    <h1>这页文字，暂时不在这里。</h1>
+    <p>也许换了一个位置，也许还没来得及写。</p>
+    <a class="quiet-link" style="margin-top: 35px;" href={localPath()}>回到首页 <span class="arrow" aria-hidden="true">→</span></a>
+  </section>
+</SiteLayout>
