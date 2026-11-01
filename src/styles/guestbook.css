@@ -1,0 +1,54 @@
+.guestbook-header { padding-bottom: 52px; }
+.guestbook-write { margin-top: 30px; }
+.guestbook-header .guestbook-hint, .guestbook-hint { color: var(--dim); font-size: 12px; margin-top: 14px; }
+.guestbook-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+.guestbook-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.guestbook-filters button { cursor: pointer; background: transparent; border: 1px solid transparent; color: var(--muted); border-radius: 4px; padding: 7px 12px; font-size: 12px; }
+.guestbook-filters button span { margin-left: 9px; font-size: 10px; opacity: .7; font-variant-numeric: tabular-nums; }
+.guestbook-filters button:hover, .guestbook-filters button[aria-pressed='true'] { color: var(--accent); background: #c7b5f209; border-color: #c7b5f22a; }
+.guestbook-count { color: var(--dim); font-size: 12px; }
+.message-card { padding: 30px 0; border-bottom: 1px solid var(--line); }
+.message-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; font-size: 12px; color: var(--muted); }
+.message-meta time { color: var(--dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+.message-status { margin-left: auto; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 2px 9px; font-size: 10px; }
+.message-status.answered { color: var(--accent); border-color: #c7b5f230; }
+.message-card h2 { margin-top: 18px; font-family: var(--serif); font-size: 25px; font-weight: 400; overflow-wrap: anywhere; }
+.message-card h2 a { display: flex; align-items: baseline; justify-content: space-between; gap: 25px; }
+.message-card h2 a span { color: var(--dim); font-family: var(--sans); font-size: 16px; }
+.message-card a:hover { color: var(--accent); }
+.message-read { display: inline-block; margin-top: 16px; color: var(--dim); font-size: 12px; }
+.message-read span { margin-left: 14px; }
+.guestbook-empty { padding: 70px 0 45px; text-align: center; }
+.guestbook-empty > span { display: block; color: var(--accent); font-size: 26px; margin-bottom: 22px; }
+.guestbook-empty h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; }
+.guestbook-empty p { color: var(--muted); font-size: 13px; margin-top: 12px; }
+.guestbook-empty .quiet-link { margin-top: 30px; }
+.reply-section { margin-top: 60px; }
+.reply-waiting { padding-top: 24px; color: var(--muted); font-size: 13px; }
+.owner-reply { margin-top: 28px; padding: 24px; border-left: 2px solid #c7b5f270; background: #c7b5f207; }
+.owner-name { display: inline-flex; align-items: center; gap: 10px; color: var(--text); }
+.owner-badge { font-size: 10px; color: var(--accent); }
+.owner-reply .prose { margin-top: 22px; }
+.owner-reply .prose > :last-child { margin-bottom: 0; }
+.guestbook-prose h1 { font-size: 29px; margin: 1.5em 0 .8em; }
+.guestbook-prose h4, .guestbook-prose h5, .guestbook-prose h6 { color: var(--text); margin: 1.5em 0 .8em; }
+.contribute-intro { padding: 0 0 32px; color: var(--muted); font-size: 14px; line-height: 2; }
+.contribute-steps { padding-left: 22px; color: var(--muted); font-size: 14px; }
+.contribute-steps > li { padding-left: 8px; margin-bottom: 34px; }
+.contribute-steps h2 { color: var(--text); font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 12px; }
+.contribute-steps p + p { margin-top: 12px; }
+.contribute-steps a, .contribute-intro a { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+.contribute-template { position: relative; margin: 20px 0; }
+.contribute-template pre { white-space: pre; overflow-x: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 52px 20px 20px; font-size: 12px; line-height: 1.9; color: var(--text); }
+.copy-template { position: absolute; right: 12px; top: 12px; cursor: pointer; background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 3px; padding: 4px 10px; font-size: 11px; }
+.contribute-note { border-top: 1px solid var(--line); padding-top: 24px; margin-top: 36px; color: var(--muted); font-size: 13px; line-height: 2; }
+[hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .guestbook-toolbar { gap: 14px; }
+  .guestbook-filters { gap: 2px; }
+  .guestbook-filters button { padding: 6px 9px; }
+  .message-card h2 { font-size: 22px; }
+  .message-meta { gap: 8px 12px; }
+  .owner-reply { padding: 20px 16px; }
+  .guestbook-empty h2 { font-size: 23px; }
+}

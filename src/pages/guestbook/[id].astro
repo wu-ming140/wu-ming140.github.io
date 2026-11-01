@@ -1,0 +1,36 @@
+---
+import { render } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { site, localPath } from '../../site';
+import { getGuestbook, messageStatus } from '../../lib/guestbook';
+import '../../styles/guestbook.css';
+
+export async function getStaticPaths() {
+  return (await getGuestbook()).map((message) => ({ params: { id: message.id }, props: { message } }));
+}
+const { message } = Astro.props;
+const { Content } = await render(message);
+const replies = await Promise.all(message.replies.map(async (reply) => ({
+  ...reply, Content: (await render(reply)).Content,
+})));
+---
+<SiteLayout title={message.data.title} active="guestbook" description={`${message.data.author}的${message.data.kind === 'question' ? '提问' : '留言'}与${site.shortName}的回复。`}>
+  <article class="article-container">
+    <a class="back-link" href={localPath('guestbook/')}>← 返回留言与问答</a>
+    <header class="article-header">
+      <p class="about-label">{message.data.kind === 'question' ? '一个提问' : '一封来信'} · {messageStatus(message)}</p>
+      <h1>{message.data.title}</h1>
+      <div class="article-metadata">
+        <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+        {message.data.github && <a href={`https://github.com/${message.data.github}`} target="_blank" rel="noopener noreferrer">@{message.data.github} ↗</a>}
+      </div>
+    </header>
+    <div class="prose guestbook-prose"><Content /></div>
+    <section class="reply-section" aria-labelledby="replies-title">
+      <div class="section-head"><h2 id="replies-title" class="section-title">博主回复</h2><span class="section-caption">{replies.length} 条回声</span></div>
+      {replies.length === 0 && <p class="reply-waiting">{message.data.kind === 'question' ? '问题已经收到了，等我想一想，再来回答。' : '谢谢你留下这句话。回复会出现在这里。'}</p>}
+      {replies.map((reply) => <article class="owner-reply"><div class="message-meta"><span class="owner-name">{site.shortName}<span class="owner-badge">博主</span></span><time datetime={reply.data.date}>{reply.data.date}</time></div><div class="prose guestbook-prose"><reply.Content /></div></article>)}
+    </section>
+    <div class="article-end"><span>谢谢你的声音。</span><a class="quiet-link" href={localPath('guestbook/contribute/')}>我也想说几句 <span class="arrow" aria-hidden="true">→</span></a></div>
+  </article>
+</SiteLayout>

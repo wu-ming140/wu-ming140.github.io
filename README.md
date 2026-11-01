@@ -1,43 +1,37 @@
-# [Astro](https://astro.build) GitHub Pages Template
+# 无暝 · 小暝宝基地
 
-## 🤖 Automatic Deployment to GitHub Pages
+使用 Astro 构建的个人博客，包含首页、文章、关于，以及通过 Markdown 与 Pull Request 管理的留言与问答。
 
-This minimal Astro project template comes with a [GitHub Action](https://github.com/features/actions) that automatically deploys your site to [GitHub Pages](https://pages.github.com/).
+## 本地使用
 
-For more information, please see our complete deployment guide—[Deploy your Astro Site to GitHub Pages](https://docs.astro.build/en/guides/deploy/github/).
+需要 Node.js 22.12+（推荐 Node.js 22 LTS）。
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```sh
+npm ci
+npm run dev
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+打开终端显示的本地网址。发布前执行 `npm test` 和 `npm run build`。
+提交并推送到 `main` 后，已有 GitHub Actions 流程会自动部署 GitHub Pages。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## 常用修改位置
 
-Any static assets, like images, can be placed in the `public/` directory.
+| 内容 | 位置 |
+| --- | --- |
+| 站名、介绍、GitHub 仓库链接 | `src/site.ts` |
+| 首页 | `src/pages/index.astro` |
+| 文章 | `src/pages/posts/*.md` |
+| 导航与全站样式 | `src/layouts/SiteLayout.astro` |
+| 留言与提问 | `src/content/guestbook/*.md` |
+| 博主回复 | `src/content/replies/*.md` |
+| 留言页样式 | `src/styles/guestbook.css` |
+| 留言 / 提问 / 回复模板 | `templates/` |
 
-## 🧞 Commands
+**访客提交与博主回复的完整步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。**
 
-All commands are run from the root of the project, from a terminal:
+访客 Fork → 新增 Markdown → 提交 PR → 博主审核合并 → 自动发布。
+博主在单独的回复文件中回答，网站自动关联并显示「待回答 / 已回答」。
+留言不需要数据库、服务端密钥或第三方评论账号；提交入口需要 GitHub 账号。
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+仓库暂不附带公开的虚构来信，第一份留言合并前会显示空状态。
+模板位于内容目录之外，不会被误当成真实留言发布。

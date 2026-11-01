@@ -6,6 +6,8 @@ export const site = {
   description: '把日子写成文字，把喜欢留在这里。',
   headline: ['把平凡的日子，', '写成自己的故事。'],
   intro: '一个安放文字和日常的小角落。慢慢记录，也慢慢发现。',
+  repository: 'https://github.com/wu-ming140/wu-ming140.github.io',
+  branch: 'main',
 };
 
 export function localPath(path = '') {

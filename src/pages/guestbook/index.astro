@@ -1,0 +1,69 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { localPath } from '../../site';
+import { getGuestbook, messageStatus } from '../../lib/guestbook';
+import '../../styles/guestbook.css';
+
+const messages = await getGuestbook();
+const questions = messages.filter((message) => message.data.kind === 'question');
+const filters = [
+  { key: 'all', label: '全部', count: messages.length },
+  { key: 'message', label: '留言', count: messages.length - questions.length },
+  { key: 'question', label: '提问', count: questions.length },
+  { key: 'unanswered', label: '待回答', count: questions.filter((message) => !message.replies.length).length },
+];
+---
+<SiteLayout title="留言与问答" active="guestbook" description="留一句话，或问一个问题。这里收下每一份经过的心意。">
+  <header class="page-header container guestbook-header">
+    <span class="eyebrow">来信与回声</span>
+    <h1>留一点声音在这里。</h1>
+    <p>打个招呼，分享近况，或者问一个问题。<br />我会把来信收好，也在这里慢慢回复。</p>
+    <a class="quiet-link guestbook-write" href={localPath('guestbook/contribute/')}>写留言 / 提问 <span class="arrow" aria-hidden="true">↗</span></a>
+    <p class="guestbook-hint">通过 GitHub 提交，审核合并后展示。</p>
+  </header>
+  <section class="archive container" aria-label="留言与问答">
+    <div class="guestbook-toolbar">
+      <div class="guestbook-filters" role="group" aria-label="筛选留言" hidden>
+        {filters.map((filter) => <button type="button" data-filter={filter.key} aria-pressed={filter.key === 'all' ? 'true' : 'false'}>{filter.label}<span>{filter.count}</span></button>)}
+      </div>
+      <p class="guestbook-count" aria-live="polite">共 {messages.length} 条来信</p>
+    </div>
+    <div class="guestbook-list">
+      {messages.map((message) => (
+        <article class="message-card" data-kind={message.data.kind} data-answered={String(message.replies.length > 0)}>
+          <div class="message-meta">
+            <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+            <span class:list={['message-status', { answered: message.replies.length > 0 }]}>{messageStatus(message)}</span>
+          </div>
+          <h2><a href={localPath(`guestbook/${message.id}/`)}>{message.data.title}<span aria-hidden="true">↗</span></a></h2>
+          <a class="message-read" href={localPath(`guestbook/${message.id}/`)}>{message.replies.length ? `阅读来信与 ${message.replies.length} 条回复` : '阅读来信'} <span aria-hidden="true">→</span></a>
+        </article>
+      ))}
+    </div>
+    {messages.length === 0 && <div class="guestbook-empty"><span aria-hidden="true">✳</span><h2>第一封来信，还在路上。</h2><p>有什么想说的，就从一句「你好」开始。</p><a class="quiet-link" href={localPath('guestbook/contribute/')}>留下第一句话 <span class="arrow" aria-hidden="true">→</span></a></div>}
+    <p class="empty-state" id="filter-empty" hidden>这个分类还没有来信。试试其他分类吧。</p>
+    <noscript><p class="guestbook-hint">以下展示全部留言与提问。</p></noscript>
+  </section>
+<script>
+  const group = document.querySelector<HTMLElement>('.guestbook-filters');
+  if (group) {
+    group.hidden = false;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.message-card'));
+    group.addEventListener('click', (event) => {
+      const button = (event.target as Element).closest<HTMLButtonElement>('button[data-filter]');
+      if (!button) return;
+      const filter = button.dataset.filter;
+      group.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      let count = 0;
+      cards.forEach((card) => {
+        const visible = filter === 'all' || card.dataset.kind === filter
+          || (filter === 'unanswered' && card.dataset.kind === 'question' && card.dataset.answered === 'false');
+        card.hidden = !visible;
+        if (visible) count++;
+      });
+      document.querySelector('.guestbook-count')!.textContent = `显示 ${count} 条来信`;
+      document.querySelector<HTMLElement>('#filter-empty')!.hidden = count !== 0 || cards.length === 0;
+    });
+  }
+</script>
+</SiteLayout>

@@ -4,7 +4,7 @@ import { site, localPath } from '../site';
 interface Props {
   title?: string;
   description?: string;
-  active?: 'home' | 'posts' | 'about';
+  active?: 'home' | 'posts' | 'guestbook' | 'about';
 }
 
 const { title, description = site.description, active = 'home' } = Astro.props;
@@ -12,6 +12,7 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const navigation = [
   { key: 'home', label: '首页', path: '' },
   { key: 'posts', label: '文章', path: 'posts/' },
+  { key: 'guestbook', label: '留言', path: 'guestbook/' },
   { key: 'about', label: '关于', path: 'about/' },
 ];
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
@@ -179,11 +180,11 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
   .empty-state { padding-block: 45px; color: var(--muted); font-size: 14px; }
   @media (max-width: 760px) {
     .container { width: calc(100% - 44px); }
-    .site-header { min-height: 86px; padding: 20px 22px; }
+    .site-header { min-height: 86px; padding: 20px 22px; flex-wrap: wrap; }
     .brand { gap: 9px; }
     .brand-mark { width: 31px; height: 31px; font-size: 15px; }
     .brand-text strong { font-size: 16px; }
-    nav { gap: 22px; }
+    nav { gap: 18px; }
     .nav-link { font-size: 12px; }
     .hero { min-height: 580px; padding-block: 68px 55px; }
     .hero h1 { font-size: clamp(30px, 6.9vw, 48px); letter-spacing: .01em; }
