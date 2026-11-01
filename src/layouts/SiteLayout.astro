@@ -4,14 +4,13 @@ import { site, localPath } from '../site';
 interface Props {
   title?: string;
   description?: string;
-  active?: 'home' | 'posts' | 'guestbook' | 'about';
+  active?: 'home' | 'guestbook' | 'about';
 }
 
 const { title, description = site.description, active = 'home' } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const navigation = [
-  { key: 'home', label: '首页', path: '' },
-  { key: 'posts', label: '文章', path: 'posts/' },
+  { key: 'home', label: '大厅', path: '' },
   { key: 'guestbook', label: '留言', path: 'guestbook/' },
   { key: 'about', label: '关于', path: 'about/' },
 ];

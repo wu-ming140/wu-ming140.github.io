@@ -13,7 +13,7 @@ export function safeMarkdownUrl(value) {
 export function validateEntries(messages, replies) {
   const ids = new Set(messages.map((message) => message.id));
   for (const message of messages) {
-    if (['index', 'contribute'].includes(message.id)) {
+    if (['index', 'contribute', 'elsewhere'].includes(message.id)) {
       throw new Error(`留言文件名与页面地址冲突，请换一个文件名：${message.id}`);
     }
   }

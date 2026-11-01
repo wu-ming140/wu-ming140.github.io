@@ -32,6 +32,7 @@ test('blank content and unsafe route names fail validation', () => {
   assert.throws(() => validateEntries([{ ...message, id: '../bad' }], []), /文件名/);
   assert.throws(() => validateEntries([{ ...message, id: 'contribute' }], []), /页面地址冲突/);
   assert.throws(() => validateEntries([{ ...message, id: 'index' }], []), /页面地址冲突/);
+  assert.throws(() => validateEntries([{ ...message, id: 'elsewhere' }], []), /页面地址冲突/);
   assert.throws(() => validateEntries([message], [{ ...reply, body: '' }]), /正文不能为空/);
 });
 

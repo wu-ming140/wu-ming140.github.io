@@ -1,6 +1,10 @@
 # 无暝 · 小暝宝基地
 
-使用 Astro 构建的个人博客，包含首页、文章、关于，以及通过 Markdown 与 Pull Request 管理的留言与问答。
+使用 Astro 构建的个人博客，包含大厅（首页）、关于，以及通过 Markdown 与 Pull Request 管理的留言与问答。
+
+首页就是大厅，依次展示小站介绍、五个专栏和全部内容。
+五个专栏分别为：生活随笔 / 心得分享、学习记录 / 学习心得、作品集、爱好、小站日志。
+写作与专栏归类步骤见 [POSTING.md](POSTING.md)。
 
 ## 本地使用
 
@@ -21,13 +25,21 @@ npm run dev
 | 站名、介绍、GitHub 仓库链接 | `src/site.ts` |
 | 首页 | `src/pages/index.astro` |
 | 文章 | `src/pages/posts/*.md` |
+| 大厅与专栏设置 | `src/lib/columns.ts` |
+| 大厅样式 | `src/styles/hall.css` |
+| 新文章模板 | `templates/post.md` |
 | 导航与全站样式 | `src/layouts/SiteLayout.astro` |
 | 留言与提问 | `src/content/guestbook/*.md` |
 | 博主回复 | `src/content/replies/*.md` |
 | 留言页样式 | `src/styles/guestbook.css` |
 | 留言 / 提问 / 回复模板 | `templates/` |
+| 手动整理的站外提问模板 | `templates/external-question.md` |
+| 博主自己的留言模板 | `templates/my-message.md` |
 
 **访客提交与博主回复的完整步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。**
+
+从 QQ、微信、邮件等渠道收到的问题，可以由博主手动录入，设置 `channel: "other"`，
+就会自动显示在「留言 → 其他渠道来信」专栏。问题与回答仍分别保存为 Markdown 文件。
 
 访客 Fork → 新增 Markdown → 提交 PR → 博主审核合并 → 自动发布。
 博主在单独的回复文件中回答，网站自动关联并显示「待回答 / 已回答」。

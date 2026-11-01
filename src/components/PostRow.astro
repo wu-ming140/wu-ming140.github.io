@@ -1,0 +1,18 @@
+---
+import { dateParts, type Post } from '../lib/posts';
+interface Props { post: Post }
+const { post } = Astro.props;
+const date = dateParts(post.frontmatter.pubDate);
+---
+<a class="post-row" href={post.url}>
+  <span class="post-year">{date.year}</span>
+  <div>
+    <h2>{post.frontmatter.title}</h2>
+    {post.frontmatter.description && <p class="post-row-description">{post.frontmatter.description}</p>}
+  </div>
+  <div class="post-meta">
+    <span class="row-category">{post.column.title}</span>
+    <time class="post-date" datetime={date.full}>{date.day}</time>
+    <span class="row-arrow" aria-hidden="true">↗</span>
+  </div>
+</a>

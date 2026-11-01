@@ -1,5 +1,9 @@
 .guestbook-header { padding-bottom: 52px; }
 .guestbook-write { margin-top: 30px; }
+.guestbook-actions { display: flex; flex-wrap: wrap; gap: 20px 32px; margin-top: 30px; }
+.elsewhere-eyebrow { margin-top: 32px; }
+.message-source { margin-top: 10px; font-size: 11px; color: var(--dim); }
+.article-header .guestbook-hint a { color: var(--accent); }
 .guestbook-header .guestbook-hint, .guestbook-hint { color: var(--dim); font-size: 12px; margin-top: 14px; }
 .guestbook-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
 .guestbook-filters { display: flex; flex-wrap: wrap; gap: 8px; }

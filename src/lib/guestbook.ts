@@ -21,3 +21,9 @@ export function messageStatus(message: Awaited<ReturnType<typeof getGuestbook>>[
   if (message.data.kind === 'question') return message.replies.length ? '已回答' : '待回答';
   return message.replies.length ? '已回复' : '留言';
 }
+
+export type GuestbookMessage = Awaited<ReturnType<typeof getGuestbook>>[number];
+
+export function messageSource(message: GuestbookMessage) {
+  return message.data.channel === 'other' ? (message.data.source || '其他渠道') : 'GitHub';
+}

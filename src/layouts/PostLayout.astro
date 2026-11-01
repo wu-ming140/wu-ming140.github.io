@@ -1,23 +1,25 @@
 ---
 import SiteLayout from './SiteLayout.astro';
 import { localPath } from '../site';
+import { getPostColumn, columnPath } from '../lib/columns';
 // Markdown 的日期建议保留引号，例如 pubDate: "2026-10-30"。
 const { frontmatter } = Astro.props;
 const { title, description, category = '随笔', sample = false } = frontmatter;
+const column = getPostColumn(category);
 const date = frontmatter.pubDate instanceof Date
   ? frontmatter.pubDate.toISOString().slice(0, 10)
   : String(frontmatter.pubDate).slice(0, 10);
 ---
-<SiteLayout title={title} description={description} active="posts">
+<SiteLayout title={title} description={description} active="home">
   <article class="article-container">
-    <a class="back-link" href={localPath('posts/')}>← 返回文章列表</a>
+    <a class="back-link" href={localPath('#journal')}>← 返回大厅</a>
     <header class="article-header">
       <h1>{title}</h1>
-      <div class="article-metadata"><time datetime={date}>{date}</time><span>{category}</span></div>
+      <div class="article-metadata"><time datetime={date}>{date}</time><a href={localPath(columnPath(column))}>{column.title} ↗</a></div>
       {description && <p class="article-description">{description}</p>}
     </header>
     {sample && <p class="sample-note">这是一篇随模板提供的示例文章，可以替换成你自己的文字。</p>}
     <div class="prose"><slot /></div>
-    <div class="article-end"><span>谢谢你读到这里。</span><a class="quiet-link" href={localPath('posts/')}>看看其他文字 <span class="arrow" aria-hidden="true">→</span></a></div>
+    <div class="article-end"><span>谢谢你读到这里。</span><a class="quiet-link" href={localPath('#columns')}>再逛逛大厅 <span class="arrow" aria-hidden="true">→</span></a></div>
   </article>
 </SiteLayout>

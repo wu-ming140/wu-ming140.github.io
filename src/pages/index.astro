@@ -2,49 +2,48 @@
 // 两条 --- 之间是 Astro 的准备区：导入布局、站点文字和文章列表。
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { site, localPath } from '../site';
-import { posts, dateParts } from '../lib/posts';
-const latestPosts = posts.slice(0, 5);
+import { posts } from '../lib/posts';
+import { postColumns, columnPath } from '../lib/columns';
+import PostRow from '../components/PostRow.astro';
+import '../styles/hall.css';
 ---
 <!-- 下面是网页结构。SiteLayout 统一提供导航、页脚和样式。 -->
-<SiteLayout active="home">
-  <section class="hero container" aria-labelledby="home-title">
+<SiteLayout title="大厅" active="home">
+  <section class="hero home-hero container" aria-labelledby="home-title">
     <div class="hero-orbit" aria-hidden="true"></div>
-    <p class="eyebrow">{site.name}</p>
+    <p class="eyebrow">小站大厅</p>
     <h1 id="home-title">
       <span>{site.headline[0]}</span>
       <span class="second-line">{site.headline[1]}</span>
     </h1>
     <p class="hero-description">{site.intro}</p>
     <div class="hero-bottom">
-      <a class="quiet-link" href="#journal">读几篇文字 <span class="arrow" aria-hidden="true">↗</span></a>
+      <a class="quiet-link" href="#columns">逛逛五个角落 <span class="arrow" aria-hidden="true">↗</span></a>
       <span class="hero-note">生活 · 文字 · 一点点喜欢</span>
     </div>
   </section>
-  <!-- posts 来自 Markdown 文件；新增文章后，这里会自动生成新的列表行。 -->
-  <section class="home-journal container" id="journal" aria-labelledby="journal-title">
-    <div class="section-head">
-      <h2 class="section-title" id="journal-title">最近写下的</h2>
-      <span class="section-caption">一些片段，也是一些日常。</span>
+  <section class="hall-columns home-columns container" id="columns" aria-labelledby="columns-title">
+    <div class="section-head"><h2 class="section-title" id="columns-title">五个角落</h2><span class="section-caption">每一种记录，都有自己的位置。</span></div>
+    <div class="column-grid">
+      {postColumns.map((column, index) => {
+        const count = posts.filter((post) => post.column.slug === column.slug).length;
+        return <a class="column-card" href={localPath(columnPath(column))}>
+          <div class="column-card-top"><span class="column-number">{String(index + 1).padStart(2, '0')}</span><span class="column-count">{count} 篇</span></div>
+          <h3>{column.title}</h3>
+          <p>{column.description}</p>
+          <span class="column-enter">进去看看 <span aria-hidden="true">↗</span></span>
+        </a>;
+      })}
     </div>
-    {latestPosts.length === 0 && <p class="empty-state">这里正在等待第一篇文字。</p>}
-    {latestPosts.map((post) => {
-      const date = dateParts(post.frontmatter.pubDate);
-      return (
-        <a class="post-row" href={post.url}>
-          <span class="post-year">{date.year}</span>
-          <div>
-            <h2>{post.frontmatter.title}</h2>
-            <p class="post-row-description">{post.frontmatter.description}</p>
-          </div>
-          <div class="post-meta">
-            <span class="row-category">{post.frontmatter.category || '随笔'}</span>
-            <time class="post-date" datetime={date.full}>{date.day}</time>
-            <span class="row-arrow" aria-hidden="true">↗</span>
-          </div>
-        </a>
-      );
-    })}
-    <div class="journal-more"><a class="quiet-link" href={localPath('posts/')}>全部文章 <span class="arrow" aria-hidden="true">→</span></a></div>
+  </section>
+  <!-- posts 来自 Markdown 文件；新增文章后，这里会自动生成新的列表行。 -->
+  <section class="home-journal hall-archive container" id="journal" aria-labelledby="journal-title">
+    <div class="section-head">
+      <h2 class="section-title" id="journal-title">全部内容</h2>
+      <span class="archive-count">共 {posts.length} 篇 · 按时间排列</span>
+    </div>
+    {posts.length === 0 && <p class="empty-state">这里正在等待第一篇文字。</p>}
+    {posts.map((post) => <PostRow post={post} />)}
   </section>
   <section class="home-quote container" aria-label="小站寄语">
     <p>不必每一天都闪闪发光，<br />有一些值得记住的瞬间，就很好。</p>

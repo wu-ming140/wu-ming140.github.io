@@ -2,7 +2,7 @@
 import { render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { site, localPath } from '../../site';
-import { getGuestbook, messageStatus } from '../../lib/guestbook';
+import { getGuestbook, messageStatus, messageSource } from '../../lib/guestbook';
 import '../../styles/guestbook.css';
 
 export async function getStaticPaths() {
@@ -22,8 +22,10 @@ const replies = await Promise.all(message.replies.map(async (reply) => ({
       <h1>{message.data.title}</h1>
       <div class="article-metadata">
         <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+        <span>来源：{messageSource(message)}</span>
         {message.data.github && <a href={`https://github.com/${message.data.github}`} target="_blank" rel="noopener noreferrer">@{message.data.github} ↗</a>}
       </div>
+      {message.data.channel === 'other' && <p class="guestbook-hint">这条来信由博主根据其他渠道的交流手动整理。<a href={localPath('guestbook/elsewhere/')}>查看这个专栏 →</a></p>}
     </header>
     <div class="prose guestbook-prose"><Content /></div>
     <section class="reply-section" aria-labelledby="replies-title">

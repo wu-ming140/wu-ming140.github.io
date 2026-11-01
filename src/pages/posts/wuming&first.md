@@ -3,7 +3,7 @@ layout: ../../layouts/PostLayout.astro
 title: "你好，小暝宝基地"
 description: "这是无暝的第一篇随笔！加油喵！"
 pubDate: "2026-10-30"
-category: "随笔"
+category: "生活随笔/心得分享"
 sample: true
 ---
 

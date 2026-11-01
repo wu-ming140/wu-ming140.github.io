@@ -1,0 +1,23 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import MessageCard from '../../components/MessageCard.astro';
+import { getGuestbook } from '../../lib/guestbook';
+import { localPath } from '../../site';
+import '../../styles/guestbook.css';
+
+const messages = (await getGuestbook()).filter((message) => message.data.channel === 'other');
+---
+<SiteLayout title="其他渠道来信" active="guestbook" description="从聊天、邮件或日常交流中收到的留言与提问，由无暝整理并回答。">
+  <header class="page-header container guestbook-header">
+    <a class="back-link" href={localPath('guestbook/')}>← 返回全部留言</a>
+    <p class="eyebrow elsewhere-eyebrow">从别处寄来的声音</p>
+    <h1>其他渠道来信。</h1>
+    <p>有些问题，来自一段聊天、一封邮件，或一次日常交流。<br />我把它们整理在这里，也把回答慢慢写下来。</p>
+    <p class="guestbook-hint">由博主手动整理，每条来信会注明来源。</p>
+  </header>
+  <section class="archive container" aria-label="其他渠道的留言与提问">
+    <div class="section-head"><h2 class="section-title">整理在这里的</h2><span class="archive-count">共 {messages.length} 条</span></div>
+    {messages.map((message) => <MessageCard message={message} />)}
+    {messages.length === 0 && <div class="guestbook-empty"><span aria-hidden="true">✳</span><h2>来信正在整理中。</h2><p>从别处收到的问题与我的回答，会陆续放在这里。</p></div>}
+  </section>
+</SiteLayout>

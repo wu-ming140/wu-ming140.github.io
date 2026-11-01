@@ -1,0 +1,15 @@
+---
+import { localPath } from '../site';
+import { messageStatus, messageSource, type GuestbookMessage } from '../lib/guestbook';
+interface Props { message: GuestbookMessage }
+const { message } = Astro.props;
+---
+<article class="message-card" data-kind={message.data.kind} data-channel={message.data.channel} data-answered={String(message.replies.length > 0)}>
+  <div class="message-meta">
+    <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+    <span class:list={['message-status', { answered: message.replies.length > 0 }]}>{messageStatus(message)}</span>
+  </div>
+  <h2><a href={localPath(`guestbook/${message.id}/`)}>{message.data.title}<span aria-hidden="true">↗</span></a></h2>
+  <p class="message-source">{message.data.channel === 'other' ? '博主整理' : '访客来信'} · {messageSource(message)}</p>
+  <a class="message-read" href={localPath(`guestbook/${message.id}/`)}>{message.replies.length ? `阅读来信与 ${message.replies.length} 条回复` : '阅读来信'} <span aria-hidden="true">→</span></a>
+</article>

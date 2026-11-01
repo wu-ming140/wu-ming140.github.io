@@ -12,6 +12,8 @@ const guestbook = defineCollection({
     author: z.string().trim().min(1).max(40),
     date,
     kind: z.enum(['message', 'question']).default('message'),
+    channel: z.enum(['github', 'other']).default('github'),
+    source: z.string().trim().min(1).max(40).optional(),
     github: z.string().regex(/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i).optional(),
     draft: z.boolean().default(false),
   }).strict(),
