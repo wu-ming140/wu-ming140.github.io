@@ -8,6 +8,7 @@ export const site = {
   intro: '一个安放文字和日常的小角落。慢慢记录，也慢慢发现。',
   repository: 'https://github.com/wu-ming140/wu-ming140.github.io',
   branch: 'main',
+  viewCounts: true,
 };
 
 export function localPath(path = '') {

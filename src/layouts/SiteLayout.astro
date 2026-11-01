@@ -1,5 +1,6 @@
 ---
 import { site, localPath } from '../site';
+import ViewCount from '../components/ViewCount.astro';
 
 interface Props {
   title?: string;
@@ -56,9 +57,14 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
       <div class="footer-bottom">
         <span>© {new Date().getFullYear()} {site.shortName}</span>
         <span>认真生活，慢慢记录。</span>
+        <ViewCount scope="site" />
         <a href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
+    <script>
+      import { initViewCounts } from '../lib/view-counts.mjs';
+      initViewCounts();
+    </script>
   </body>
 </html>
 
@@ -205,7 +211,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     .footer-top { flex-direction: column; gap: 12px; }
     .footer-name { font-size: 17px; }
     .footer-bottom { gap: 12px 18px; margin-top: 30px; font-size: 10px; }
-    .footer-bottom > span:nth-child(2) { display: none; }
+    .footer-bottom > span:nth-child(2):not(.view-count) { display: none; }
     .page-header { padding-block: 55px 40px; }
     .article-container { width: calc(100% - 44px); padding-block: 24px 70px; }
     .article-header { padding-block: 32px 28px; }

@@ -1,0 +1,21 @@
+---
+import { site } from '../site';
+
+interface Props {
+  scope: 'site' | 'page';
+}
+
+const { scope } = Astro.props;
+---
+{site.viewCounts && Astro.site && (
+  <span class="view-count" data-view-count={scope === 'site' ? 'site_pv' : 'page_pv'}
+    data-count-origin={Astro.site.origin} title="浏览量加载中">
+    {scope === 'site' ? '全站浏览' : '阅读'}
+    <span data-count-value aria-live="polite">—</span>
+  </span>
+)}
+
+<style>
+  .view-count { display: inline-flex; align-items: baseline; gap: .5em; }
+  [data-count-value] { font-variant-numeric: tabular-nums; }
+</style>

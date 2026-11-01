@@ -1,5 +1,6 @@
 ---
 import SiteLayout from './SiteLayout.astro';
+import ViewCount from '../components/ViewCount.astro';
 import { localPath } from '../site';
 import { getPostColumn, columnPath } from '../lib/columns';
 // Markdown 的日期建议保留引号，例如 pubDate: "2026-10-30"。
@@ -15,7 +16,11 @@ const date = frontmatter.pubDate instanceof Date
     <a class="back-link" href={localPath('#journal')}>← 返回大厅</a>
     <header class="article-header">
       <h1>{title}</h1>
-      <div class="article-metadata"><time datetime={date}>{date}</time><a href={localPath(columnPath(column))}>{column.title} ↗</a></div>
+      <div class="article-metadata">
+        <time datetime={date}>{date}</time>
+        <a href={localPath(columnPath(column))}>{column.title} ↗</a>
+        <ViewCount scope="page" />
+      </div>
       {description && <p class="article-description">{description}</p>}
     </header>
     {sample && <p class="sample-note">这是一篇随模板提供的示例文章，可以替换成你自己的文字。</p>}
