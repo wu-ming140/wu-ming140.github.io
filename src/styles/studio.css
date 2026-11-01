@@ -20,6 +20,9 @@
 .studio-connection-row, .studio-existing { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 .studio-connection-row > label, .studio-existing > label { flex: 1; min-width: min(260px, 100%); }
 .studio-existing { margin-block: 0 30px; }
+.studio-local-draft { margin-bottom: 28px; padding: 15px 18px; border-left: 2px solid #c7b5f280; background: #c7b5f206; }
+.studio-local-draft > p:first-child { color: var(--accent); font-size: 12px; }
+.studio-local-draft .studio-hint { margin-top: 6px; }
 .studio-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
 .studio-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-block: 30px 10px; }
 .studio .studio-file-button { display: inline-flex; position: relative; color: var(--text); }

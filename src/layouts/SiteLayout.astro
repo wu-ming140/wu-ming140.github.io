@@ -1,6 +1,7 @@
 ---
 import { site, localPath } from '../site';
 import ViewCount from '../components/ViewCount.astro';
+import ImageViewer from '../components/ImageViewer.astro';
 
 interface Props {
   title?: string;
@@ -65,6 +66,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
         <a href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
+    <ImageViewer />
     <script>
       import { initViewCounts } from '../lib/view-counts.mjs';
       initViewCounts();

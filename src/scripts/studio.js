@@ -3,6 +3,7 @@ import { getPostColumn } from '../lib/columns';
 import { mediaType, mediaPath, mediaMarkdown, MAX_MEDIA_BYTES, MAX_TOTAL_MEDIA_BYTES } from '../lib/media.mjs';
 import { buildDocument, parseDocument, renderMarkdown, contentKind, base64ToText } from '../lib/studio-content.mjs';
 import { GitHubPublisher } from '../lib/studio-github.mjs';
+import { createDraftStorage, createDraftSession, restoreDraft } from '../lib/studio-drafts.mjs';
 
 const root = document.getElementById('studio');
 const byId = (name) => document.getElementById(`studio-${name}`);
@@ -20,6 +21,49 @@ let planned = null;
 let previewVersion = 0;
 let previewTimer;
 let mediaPending = false;
+const drafts = createDraftSession(createDraftStorage(), `${root.dataset.repository}#${root.dataset.branch}`);
+let draftReady = false;
+let draftTimer;
+let draftVersion = 0;
+let savedVersion = 0;
+let draftClearing = false;
+
+function draftStatus(message) { byId('local-status').textContent = message; }
+function draftError(error) {
+  draftStatus(`自动保存未完成：${errorMessage(error)} 请使用「下载完整草稿」保留正文和附件。`);
+}
+function contentChanged() {
+  dirty = true;
+  draftVersion++;
+  if (!draftReady) return;
+  draftStatus('正在等待保存到本机…');
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => void saveLocalDraft(), 600);
+}
+async function saveLocalDraft() {
+  clearTimeout(draftTimer);
+  if (!draftReady || draftClearing || savedVersion === draftVersion) return;
+  const version = draftVersion;
+  try {
+    const record = await drafts.save({ fields: fields(), loadedSha, originalMetadata, assets, dirty });
+    if (version !== draftVersion) return;
+    savedVersion = version;
+    draftStatus(`已自动保存到本机 · ${new Date(record.savedAt).toLocaleTimeString('zh-CN')}（含图片和视频附件）`);
+  } catch (error) { if (version === draftVersion) draftError(error); }
+}
+async function clearLocalDraft(message) {
+  clearTimeout(draftTimer);
+  const version = ++draftVersion;
+  draftClearing = true;
+  try {
+    // 未能读取旧草稿时，禁止覆盖可能仍在本机的内容。
+    if (!draftReady) throw new Error('请刷新页面，重新读取本地草稿后再试。');
+    await drafts.clear();
+    if (version === draftVersion) { savedVersion = version; draftStatus(message); }
+    return true;
+  } catch (error) { draftError(error); return false; }
+  finally { draftClearing = false; }
+}
 
 function today() {
   const date = new Date();
@@ -57,8 +101,7 @@ function releaseAssets() {
   byId('assets').replaceChildren();
 }
 
-function newDocument() {
-  if (busy || (dirty && !confirm('当前编辑尚未发布。需要保留时，请先下载完整草稿。继续新建吗？'))) return;
+function resetDocument() {
   form.reset();
   releaseAssets();
   editPath = '';
@@ -74,6 +117,14 @@ function newDocument() {
   showFields();
   status('');
   void preview();
+}
+
+async function newDocument() {
+  if (busy || (dirty && !confirm('新建会替换当前内容及本机草稿。需要保留时，请先下载完整草稿。继续新建吗？'))) return;
+  setBusy(true);
+  try {
+    if (await clearLocalDraft('尚无待保存草稿，编辑后会自动保存。')) resetDocument();
+  } finally { setBusy(false); }
 }
 
 function fields() {
@@ -118,7 +169,7 @@ async function preview() {
 function insert(text) {
   body.setRangeText(`\n\n${text}\n\n`, body.selectionStart, body.selectionEnd, 'end');
   body.focus();
-  dirty = true;
+  contentChanged();
   void preview();
 }
 
@@ -138,7 +189,7 @@ function renderAssets() {
       body.value = body.value.replaceAll(asset.markdown, '');
       URL.revokeObjectURL(asset.preview);
       assets = assets.filter((item) => item !== asset);
-      dirty = true;
+      contentChanged();
       renderAssets();
       void preview();
     });
@@ -224,6 +275,7 @@ byId('load').addEventListener('click', async () => {
     const { metadata, body: text } = parseDocument(base64ToText(await publisher.read(sha)));
     const kind = contentKind(path);
     const category = kind === 'article' ? getPostColumn(metadata.category).aliases[0] : '';
+    if (!await clearLocalDraft('已载入仓库内容，编辑后会自动保存本机草稿。')) return;
     releaseAssets();
     editPath = path;
     loadedSha = sha;
@@ -305,6 +357,7 @@ byId('confirm-publish').addEventListener('click', async () => {
     loadedSha = saved.documentSha;
     for (const asset of planned.assets) asset.published = true;
     dirty = false;
+    await clearLocalDraft('已发布，待恢复的本机草稿已清除。继续编辑会自动保存新草稿。');
     byId('actions-link').hidden = false;
     status('已保存到博客仓库，网站正在自动更新。可以通过下方链接查看发布进度。');
     // 同步最新版本，后续编辑继续保护并发更新。
@@ -333,13 +386,14 @@ body.addEventListener('paste', (event) => {
   void addFiles(event.clipboardData.files);
 });
 form.addEventListener('input', () => {
-  dirty = true;
+  contentChanged();
   clearTimeout(previewTimer);
   previewTimer = setTimeout(() => void preview(), 200);
 });
 byId('type').addEventListener('change', () => {
   if (!editPath) byId('source').value = byId('type').value === 'question' ? '其他渠道' : '博主自留';
   showFields();
+  contentChanged();
   void preview();
 });
 byId('insert-url').addEventListener('click', () => byId('url-dialog').showModal());
@@ -352,5 +406,36 @@ byId('url-form').addEventListener('submit', (event) => {
   } catch (error) { status(errorMessage(error)); byId('url-dialog').close(); }
 });
 for (const button of root.querySelectorAll('[data-close-dialog]')) button.addEventListener('click', () => document.getElementById(button.dataset.closeDialog).close());
-window.addEventListener('beforeunload', (event) => { if (dirty || busy) { event.preventDefault(); event.returnValue = ''; } });
-newDocument();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') void saveLocalDraft(); });
+window.addEventListener('pagehide', () => void saveLocalDraft());
+window.addEventListener('beforeunload', (event) => {
+  if (busy || (dirty && savedVersion !== draftVersion)) { event.preventDefault(); event.returnValue = ''; }
+});
+
+async function initialize() {
+  resetDocument();
+  setBusy(true);
+  draftStatus('正在检查本机草稿…');
+  try {
+    const record = await drafts.read();
+    if (record) {
+      const restored = restoreDraft(record);
+      for (const [name, value] of Object.entries(restored.fields)) {
+        if (name === 'editPath') continue;
+        if (name === 'draft') byId(name).checked = value;
+        else byId(name).value = value;
+      }
+      editPath = restored.fields.editPath;
+      loadedSha = restored.loadedSha;
+      originalMetadata = restored.originalMetadata;
+      assets = restored.assets;
+      dirty = restored.dirty;
+      renderAssets();
+      void preview();
+      draftStatus(`已恢复本机草稿 · ${new Date(restored.savedAt).toLocaleString('zh-CN')}（含图片和视频附件）`);
+    } else draftStatus('尚无待保存草稿，编辑后会自动保存。');
+    draftReady = true;
+  } catch (error) { draftError(error); }
+  finally { setBusy(false); }
+}
+void initialize();

@@ -1,0 +1,30 @@
+<dialog class="image-viewer" id="image-viewer" aria-label="图片放大预览" aria-describedby="image-viewer-help">
+  <button type="button" class="image-viewer-close" aria-label="关闭图片预览" autofocus>关闭 ×</button>
+  <figure>
+    <img class="image-viewer-photo" alt="" />
+    <figcaption class="image-viewer-caption"></figcaption>
+  </figure>
+  <p id="image-viewer-help">按 Esc、点击空白处或关闭按钮返回正文</p>
+</dialog>
+<script>
+  import { initImageViewer } from '../lib/image-viewer.mjs';
+  initImageViewer(document);
+</script>
+<style is:global>
+  .prose .image-zoom { display: block; max-width: 100%; padding: 0; margin: 1.8em 0; background: transparent; border: 0; border-radius: 3px; cursor: zoom-in; }
+  .prose .image-zoom img { margin: 0; }
+  .image-viewer { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 76px 24px 24px; border: 0; background: #08090bf5; color: var(--text); overflow: auto; }
+  .image-viewer[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .image-viewer::backdrop { background: #000c; }
+  .image-viewer figure { margin: 0; max-width: 100%; text-align: center; }
+  .image-viewer-photo { display: block; max-width: 100%; max-height: calc(100dvh - 190px); width: auto; height: auto; object-fit: contain; margin-inline: auto; }
+  .image-viewer-caption { margin-top: 12px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+  .image-viewer-caption:empty { display: none; }
+  .image-viewer-close { position: absolute; top: 18px; right: 24px; padding: 9px 17px; color: var(--text); border: 1px solid #ffffff40; border-radius: 4px; background: #191a20; cursor: pointer; }
+  #image-viewer-help { color: var(--dim); font-size: 11px; text-align: center; }
+  html.image-viewer-open { overflow: hidden; }
+  @media (max-width: 560px) {
+    .image-viewer { padding-inline: 12px; }
+    .image-viewer-close { right: 12px; }
+  }
+</style>
