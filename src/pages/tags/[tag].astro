@@ -1,0 +1,22 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PostRow from '../../components/PostRow.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { posts } from '../../lib/posts';
+import { collectTags, tagSlug } from '../../lib/post-meta.mjs';
+import { localPath } from '../../site';
+export function getStaticPaths() {
+  return collectTags(posts).map((tag) => ({ params: { tag: tag.slug }, props: { tag } }));
+}
+const { tag } = Astro.props;
+const matching = posts.filter((post) => post.tags.some((item) => tagSlug(item) === tag.slug));
+const projects = matching.filter((post) => post.column.slug === 'portfolio');
+const articles = matching.filter((post) => post.column.slug !== 'portfolio');
+---
+<SiteLayout title={`标签：${tag.tag}`} active="tags">
+  <header class="page-header container"><a class="back-link" href={localPath('tags/')}>← 全部标签</a><h1># {tag.tag}</h1><p>和这个关键词有关的 {matching.length} 份记录。</p></header>
+  <section class="archive container" aria-label={`带有${tag.tag}标签的内容`}>
+    {projects.length > 0 && <div class="project-grid">{projects.map((post) => <ProjectCard post={post} />)}</div>}
+    {articles.map((post) => <PostRow post={post} />)}
+  </section>
+</SiteLayout>

@@ -3,9 +3,13 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import { localPath } from '../../site';
 import { getGuestbook } from '../../lib/guestbook';
 import MessageCard from '../../components/MessageCard.astro';
+import CuratedSection from '../../components/CuratedSection.astro';
+import BrowseList from '../../components/BrowseList.astro';
+import { getCatalog } from '../../lib/catalog';
 import '../../styles/guestbook.css';
 
 const messages = await getGuestbook();
+const catalog = await getCatalog();
 const questions = messages.filter((message) => message.data.kind === 'question');
 const filters = [
   { key: 'all', label: '全部', count: messages.length },
@@ -33,8 +37,9 @@ const filters = [
       </div>
       <p class="guestbook-count" aria-live="polite">共 {messages.length} 条来信</p>
     </div>
+    {['guestbook', 'messages', 'questions', 'unanswered', 'elsewhere'].map((board) => <CuratedSection entries={catalog} board={board} hidden={board !== 'guestbook'} />)}
     <div class="guestbook-list">
-      {messages.map((message) => <MessageCard message={message} />)}
+      <BrowseList>{messages.map((message) => <MessageCard message={message} />)}</BrowseList>
     </div>
     {messages.length === 0 && <div class="guestbook-empty"><span aria-hidden="true">✳</span><h2>第一封来信，还在路上。</h2><p>有什么想说的，就从一句「你好」开始。</p><a class="quiet-link" href={localPath('guestbook/contribute/')}>留下第一句话 <span class="arrow" aria-hidden="true">→</span></a></div>}
     <p class="empty-state" id="filter-empty" hidden>这个分类还没有来信。试试其他分类吧。</p>
@@ -49,6 +54,8 @@ const filters = [
       const button = (event.target as Element).closest<HTMLButtonElement>('button[data-filter]');
       if (!button) return;
       const filter = button.dataset.filter;
+      const board = ({ all: 'guestbook', message: 'messages', question: 'questions', unanswered: 'unanswered', other: 'elsewhere' } as Record<string, string>)[filter!];
+      document.querySelectorAll<HTMLElement>('[data-curated-board]').forEach((section) => { section.hidden = section.dataset.curatedBoard !== board; });
       group.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
       let count = 0;
       cards.forEach((card) => {
@@ -60,6 +67,7 @@ const filters = [
       });
       document.querySelector('.guestbook-count')!.textContent = `显示 ${count} 条来信`;
       document.querySelector<HTMLElement>('#filter-empty')!.hidden = count !== 0 || cards.length === 0;
+      document.querySelector('[data-browse-list]')?.dispatchEvent(new Event('browse:filter'));
     });
   }
 </script>

@@ -1,0 +1,21 @@
+---
+interface Props { label?: string; layout?: 'rows' | 'projects' }
+const { label = '浏览方式', layout = 'rows' } = Astro.props;
+---
+<div data-browse-list data-layout={layout}>
+  <div class="browse-controls" data-browse-controls hidden><label>{label}<select aria-label={label}><option value="newest">最新在前</option><option value="oldest">最早在前</option><option value="months">按年月归档</option></select></label></div>
+  <div data-browse-items class:list={{ 'project-grid': layout === 'projects' }}><slot /></div>
+</div>
+<script>
+  import { initBrowseLists } from '../lib/browse.mjs';
+  initBrowseLists(document);
+</script>
+<style is:global>
+  .browse-controls { display: flex; justify-content: flex-end; margin: 20px 0; }
+  .browse-controls[hidden] { display: none; }
+  .browse-controls label { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+  .browse-controls select { padding: 8px 12px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; font: inherit; }
+  .browse-month { margin-top: 32px; }
+  .browse-month > h3 { padding-bottom: 14px; border-bottom: 1px solid var(--line); font: 400 22px/1.7 var(--serif); color: #c8c0d5; }
+  .browse-month[hidden] { display: none; }
+</style>

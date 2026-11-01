@@ -1,12 +1,15 @@
 import { MAX_MEDIA_BYTES, MAX_TOTAL_MEDIA_BYTES, mediaType } from './media.mjs';
+import { normalizePlacements } from './editorial.mjs';
 
-const fieldNames = ['type', 'name', 'title', 'date', 'category', 'description', 'author', 'source', 'message', 'body', 'editPath'];
+const fieldNames = ['type', 'name', 'title', 'date', 'category', 'description', 'author', 'source', 'message', 'body', 'editPath', 'tags', 'cover', 'coverAlt'];
 const conflictMessage = '另一页写作台已更新本地草稿，本页已停止自动保存。请先下载本页的完整草稿，再刷新或关闭其他写作台。';
 
 // 只保存编辑内容；连接凭证、GitHub 客户端及临时预览地址不进入存储。
 export function serializeDraft(state) {
   const fields = Object.fromEntries(fieldNames.map((name) => [name, String(state.fields[name] ?? '')]));
   fields.draft = Boolean(state.fields.draft);
+  fields.placements = normalizePlacements(state.fields.placements);
+  fields.collections = (state.fields.collections || []).map((item) => ({ name: String(item.name || ''), order: item.order ?? 1 }));
   if (!['article', 'message', 'question', 'reply'].includes(fields.type)) throw new Error('草稿的内容类型无法识别。');
   let total = 0;
   const assets = state.assets.map((asset) => {

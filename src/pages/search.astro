@@ -1,0 +1,50 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { localPath } from '../site';
+---
+<SiteLayout title="站内搜索" active="search" description="查找小站里的文章、作品、留言与回答。">
+  <header class="page-header container"><p class="eyebrow">在文字里找一找</p><h1>站内搜索</h1><p>记得一句话、一个标签，或一个问题，都可以从这里找回来。</p></header>
+  <section class="search-page container" aria-label="搜索小站">
+    <form id="site-search" role="search" data-index={localPath('search-index.json')}>
+      <div class="search-controls">
+        <label class="search-input-label">关键词<input type="search" name="q" maxlength="120" placeholder="例如：递归、学习心得、作品" autocomplete="off" aria-controls="search-results" /></label>
+        <label>内容类型<select name="type"><option value="">全部内容</option><option>文章</option><option>作品</option><option>留言与问答</option><option>页面</option></select></label>
+        <button type="submit">搜索</button>
+      </div>
+      <p class="search-help">支持查找标题、简介、标签和正文；多个关键词用空格隔开。</p>
+      <p data-search-status role="status" class="search-status">输入关键词，找一篇文字或一段回答。</p>
+      <ul id="search-results" data-search-results class="search-results"></ul>
+      <button type="button" data-search-more class="search-more" hidden>再看一些结果</button>
+    </form>
+    <noscript><p class="empty-state">搜索需要启用 JavaScript。也可以到<a href={localPath('#columns')}>大厅专栏</a>或<a href={localPath('tags/')}>标签页</a>查找内容。</p></noscript>
+  </section>
+</SiteLayout>
+<script>
+  import { initSearch } from '../lib/search.mjs';
+  initSearch(document);
+</script>
+<style>
+  .search-page { padding-bottom: 100px; min-height: 45vh; }
+  .search-controls { display: flex; align-items: end; gap: 15px; flex-wrap: wrap; }
+  label { display: flex; flex-direction: column; gap: 9px; color: var(--muted); font-size: 12px; }
+  .search-input-label { flex: 1; min-width: min(280px, 100%); }
+  input, select, button { padding: 12px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 4px; font: inherit; line-height: 1.7; }
+  input { width: 100%; min-width: 0; font-size: 15px; }
+  input:focus, select:focus { outline: 1px solid var(--accent); outline-offset: 2px; }
+  button { cursor: pointer; font-size: 13px; border-color: #c7b5f260; }
+  button:hover { border-color: var(--accent); }
+  [hidden] { display: none !important; }
+  .search-help { margin-top: 14px; color: var(--dim); font-size: 11px; }
+  .search-status { margin-top: 36px; padding-bottom: 22px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  .search-results { list-style: none; padding: 0; margin: 0; }
+  .search-more { margin-top: 24px; }
+  @media (max-width: 560px) { .search-input-label { flex-basis: 100%; } }
+</style>
+<style is:global>
+  .search-results li { padding: 28px 0; border-bottom: 1px solid var(--line); }
+  .search-result-meta { color: var(--dim); font-size: 11px; }
+  .search-results h2 { margin-top: 10px; font: 400 25px/1.7 var(--serif); overflow-wrap: anywhere; }
+  .search-results h2 a:hover { color: var(--accent); }
+  .search-results h2 + p { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.9; overflow-wrap: anywhere; }
+  .search-result-tags { margin-top: 14px; color: var(--accent); font-size: 11px; }
+</style>

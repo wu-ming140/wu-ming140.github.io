@@ -1,11 +1,15 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import MessageCard from '../../components/MessageCard.astro';
+import CuratedSection from '../../components/CuratedSection.astro';
+import BrowseList from '../../components/BrowseList.astro';
+import { getCatalog } from '../../lib/catalog';
 import { getGuestbook } from '../../lib/guestbook';
 import { localPath } from '../../site';
 import '../../styles/guestbook.css';
 
 const messages = (await getGuestbook()).filter((message) => message.data.channel === 'other');
+const catalog = await getCatalog();
 ---
 <SiteLayout title="其他渠道来信" active="guestbook" description="从聊天、邮件或日常交流中收到的留言与提问，由无暝整理并回答。">
   <header class="page-header container guestbook-header">
@@ -16,8 +20,9 @@ const messages = (await getGuestbook()).filter((message) => message.data.channel
     <p class="guestbook-hint">由博主手动整理，每条来信会注明来源。</p>
   </header>
   <section class="archive container" aria-label="其他渠道的留言与提问">
+    <CuratedSection entries={catalog} board="elsewhere" />
     <div class="section-head"><h2 class="section-title">整理在这里的</h2><span class="archive-count">共 {messages.length} 条</span></div>
-    {messages.map((message) => <MessageCard message={message} />)}
+    <BrowseList>{messages.map((message) => <MessageCard message={message} />)}</BrowseList>
     {messages.length === 0 && <div class="guestbook-empty"><span aria-hidden="true">✳</span><h2>来信正在整理中。</h2><p>从别处收到的问题与我的回答，会陆续放在这里。</p></div>}
   </section>
 </SiteLayout>

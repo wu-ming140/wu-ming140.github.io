@@ -1,6 +1,6 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { site } from '../site';
+import { site, about } from '../site';
 ---
 <SiteLayout title="关于" active="about" description={`关于${site.name}。`}>
   <article class="article-container">
@@ -11,12 +11,9 @@ import { site } from '../site';
     </header>
     <div class="prose about-body">
       <p>欢迎来到这个小站。</p>
-      <p>这里会记录一些想法、一些日常，和一些值得收藏的喜欢。希望它可以成为一个安静的角落，让文字有归处，也让时间留下痕迹。</p>
-      <h2>关于这个名字</h2>
-      <p>{site.name}，是这个小站的名字。关于它更多的故事，留待以后慢慢写。</p>
-      <h2>关于这里的文字</h2>
-      <p>不赶进度，也不规定主题。认真生活，偶尔写字，慢慢把这里变成自己喜欢的样子。</p>
-      <blockquote><p>谢谢你来，希望这里有让你愿意停留片刻的文字。</p></blockquote>
+      <p>{about.intro}</p>
+      {about.sections.map((section) => <><h2>{section.title}</h2><p>{section.text}</p></>)}
+      <blockquote><p>{about.thanks}</p></blockquote>
     </div>
   </article>
 </SiteLayout>

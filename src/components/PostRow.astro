@@ -1,18 +1,20 @@
 ---
 import { dateParts, type Post } from '../lib/posts';
+import TagList from './TagList.astro';
 interface Props { post: Post }
 const { post } = Astro.props;
 const date = dateParts(post.frontmatter.pubDate);
 ---
-<a class="post-row" href={post.url}>
+<article class="post-row" data-entry-date={date.full} data-entry-id={post.url}>
   <span class="post-year">{date.year}</span>
   <div>
-    <h2>{post.frontmatter.title}</h2>
+    <h2><a href={post.url}>{post.frontmatter.title}</a></h2>
     {post.frontmatter.description && <p class="post-row-description">{post.frontmatter.description}</p>}
+    <TagList tags={post.tags} />
   </div>
   <div class="post-meta">
     <span class="row-category">{post.column.title}</span>
     <time class="post-date" datetime={date.full}>{date.day}</time>
-    <span class="row-arrow" aria-hidden="true">↗</span>
+    <a class="row-arrow" href={post.url} aria-label={`阅读：${post.frontmatter.title}`}>↗</a>
   </div>
-</a>
+</article>

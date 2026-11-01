@@ -1,0 +1,17 @@
+---
+import type { CatalogEntry } from '../lib/catalog';
+import { curatedEntries } from '../lib/editorial.mjs';
+import ContentLink from './ContentLink.astro';
+interface Props { entries: CatalogEntry[]; board: string; hidden?: boolean }
+const { entries, board, hidden = false } = Astro.props;
+const groups = [{ flag: 'pinned', title: '置顶', items: curatedEntries(entries, board, 'pinned') }, { flag: 'featured', title: '精选', items: curatedEntries(entries, board, 'featured') }];
+---
+{groups.some((group) => group.items.length) && <section class="curated-section" data-curated-board={board} hidden={hidden} aria-label="本板块的置顶与精选">
+  {groups.filter((group) => group.items.length).map((group) => <div class="curated-group" data-curated-kind={group.flag}><div class="section-head"><h2 class="section-title">本板块{group.title}</h2><span class="section-caption">{group.items.length} 份记录</span></div><div class="content-link-grid">{group.items.map((entry) => <ContentLink entry={entry} />)}</div></div>)}
+</section>}
+<style is:global>
+  .curated-section { margin-bottom: 38px; }
+  .curated-section[hidden] { display: none; }
+  .curated-group + .curated-group { margin-top: 30px; }
+  .curated-group .section-title { color: var(--accent); }
+</style>

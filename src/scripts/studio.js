@@ -4,6 +4,9 @@ import { mediaType, mediaPath, mediaMarkdown, MAX_MEDIA_BYTES, MAX_TOTAL_MEDIA_B
 import { buildDocument, parseDocument, renderMarkdown, contentKind, base64ToText } from '../lib/studio-content.mjs';
 import { GitHubPublisher } from '../lib/studio-github.mjs';
 import { createDraftStorage, createDraftSession, restoreDraft } from '../lib/studio-drafts.mjs';
+import { normalizeCover, normalizeTags } from '../lib/post-meta.mjs';
+import { createEditorialControls, renderFindings } from '../lib/editorial-controls.mjs';
+import { inspectPublication } from '../lib/publication-checks.mjs';
 
 const root = document.getElementById('studio');
 const byId = (name) => document.getElementById(`studio-${name}`);
@@ -27,6 +30,11 @@ let draftTimer;
 let draftVersion = 0;
 let savedVersion = 0;
 let draftClearing = false;
+const checkCatalog = JSON.parse(root.dataset.catalog || '[]');
+const editorial = createEditorialControls({
+  document, placementsRoot: byId('placements'), collectionsRoot: byId('collections'), onChange: contentChanged,
+  getContext: () => ({ type: byId('type').value, column: getPostColumn(byId('category').value).slug, channel: originalMetadata.channel || 'other', busy }),
+});
 
 function draftStatus(message) { byId('local-status').textContent = message; }
 function draftError(error) {
@@ -35,6 +43,7 @@ function draftError(error) {
 function contentChanged() {
   dirty = true;
   draftVersion++;
+  byId('check-panel').hidden = true;
   if (!draftReady) return;
   draftStatus('正在等待保存到本机…');
   clearTimeout(draftTimer);
@@ -82,6 +91,7 @@ function showFields() {
   for (const label of root.querySelectorAll('[data-for]')) label.hidden = !label.dataset.for.split(' ').includes(byId('type').value);
   byId('type').disabled = Boolean(editPath) || busy;
   byId('name').readOnly = Boolean(editPath);
+  editorial.renderPlacements();
 }
 
 function setBusy(value) {
@@ -107,6 +117,8 @@ function resetDocument() {
   editPath = '';
   loadedSha = '';
   originalMetadata = {};
+  editorial.set();
+  byId('check-panel').hidden = true;
   byId('name').value = `${today()}-${randomId()}`;
   byId('date').value = today();
   byId('author').value = root.dataset.author;
@@ -133,16 +145,26 @@ function fields() {
     date: byId('date').value, category: byId('category').value,
     description: byId('description').value, author: byId('author').value,
     source: byId('source').value, message: byId('message').value,
+    tags: byId('tags').value, cover: byId('cover').value, coverAlt: byId('coverAlt').value,
+    ...editorial.fields(),
     draft: byId('draft').checked, body: body.value, editPath,
   };
 }
 
 async function preview() {
   const version = ++previewVersion;
+  byId('cover-preview').hidden = true;
   try {
+    const cover = byId('type').value === 'article' ? normalizeCover(byId('cover').value) : '';
     const html = await renderMarkdown(body.value, byId('type').value);
     if (version !== previewVersion) return;
     byId('preview-error').hidden = true;
+    if (cover) {
+      const asset = assets.find((item) => item.url === cover);
+      byId('cover-image').src = asset?.preview || (cover.startsWith('/') ? `${root.dataset.site}${cover}` : cover);
+      byId('cover-image').alt = byId('coverAlt').value || byId('title').value || '封面';
+      byId('cover-preview').hidden = false;
+    }
     const target = byId('preview');
     target.innerHTML = html || '<p class="studio-empty">你的文字、图片和视频会显示在这里。</p>';
     for (const media of target.querySelectorAll('img, video')) {
@@ -187,6 +209,7 @@ function renderAssets() {
     remove.addEventListener('click', () => {
       if (busy) return;
       body.value = body.value.replaceAll(asset.markdown, '');
+      if (byId('cover').value === asset.url) byId('cover').value = '';
       URL.revokeObjectURL(asset.preview);
       assets = assets.filter((item) => item !== asset);
       contentChanged();
@@ -198,12 +221,13 @@ function renderAssets() {
   }
 }
 
-async function addFiles(files) {
+async function addFiles(files, asCover = false) {
   if (busy || mediaPending) return;
   mediaPending = true;
   try {
     const selected = [...files];
     if (!selected.length) return;
+    if (asCover && (selected.length !== 1 || mediaType(selected[0].name) !== 'image')) throw new Error('封面请选择一张图片。');
     if (selected.some((file) => file.size === 0 || file.size > MAX_MEDIA_BYTES)) throw new Error('请选择非空文件，且每个文件不超过 20 MB。较长的视频可以改用媒体网址。');
     if (selected.reduce((sum, file) => sum + file.size, 0) + assets.reduce((sum, asset) => sum + asset.file.size, 0) > MAX_TOTAL_MEDIA_BYTES) throw new Error('本次附件总计不能超过 50 MB，可以减少文件或使用视频直链。');
     // 先检查整组文件，避免某个文件不支持时只插入了一部分。
@@ -216,11 +240,16 @@ async function addFiles(files) {
       asset.preview = URL.createObjectURL(asset.file);
       assets.push(asset);
     }
-    insert(prepared.map((asset) => asset.markdown).join('\n\n'));
+    if (asCover) {
+      byId('cover').value = prepared[0].url;
+      if (!byId('coverAlt').value) byId('coverAlt').value = selected[0].name;
+      contentChanged();
+      void preview();
+    } else insert(prepared.map((asset) => asset.markdown).join('\n\n'));
     renderAssets();
-    status(`已插入 ${prepared.length} 个文件。现在可以预览、下载草稿或发布。`);
+    status(asCover ? '已设置封面，会随正文一起保存和发布。' : `已插入 ${prepared.length} 个文件。现在可以预览、下载草稿或发布。`);
   } catch (error) { status(errorMessage(error)); }
-  finally { mediaPending = false; byId('files').value = ''; }
+  finally { mediaPending = false; byId('files').value = ''; byId('cover-file').value = ''; }
 }
 
 function updateExistingList() {
@@ -280,12 +309,17 @@ byId('load').addEventListener('click', async () => {
     editPath = path;
     loadedSha = sha;
     originalMetadata = metadata;
+    editorial.set(metadata);
+    byId('check-panel').hidden = true;
     byId('type').value = kind === 'message' ? (metadata.kind || 'message') : kind;
     byId('name').value = path.split('/').pop().slice(0, -3);
     byId('title').value = metadata.title || '';
     byId('date').value = String(metadata.pubDate || metadata.date || today()).slice(0, 10);
     if (kind === 'article') byId('category').value = category;
     byId('description').value = metadata.description || '';
+    byId('tags').value = normalizeTags(metadata.tags).join('，');
+    byId('cover').value = metadata.cover || '';
+    byId('coverAlt').value = metadata.coverAlt || '';
     byId('author').value = metadata.author || root.dataset.author;
     byId('source').value = metadata.source || '';
     byId('message').value = metadata.message || '';
@@ -303,6 +337,30 @@ async function prepareDocument() {
   await renderMarkdown(document.body, byId('type').value);
   return document;
 }
+
+async function checkDocument(content) {
+  const findings = inspectPublication(content, { assets, entries: snapshot?.entries, catalog: checkCatalog, today: today() });
+  if (content.metadata.message && snapshot) {
+    const sha = snapshot.entries.get(`src/content/guestbook/${content.metadata.message}.md`);
+    if (!sha) findings.push({ level: 'error', message: '仓库里还没有对应留言，请先发布留言，再发布回复。' });
+    else {
+      const parent = parseDocument(base64ToText(await publisher.read(sha)));
+      if (content.metadata.date < parent.metadata.date) findings.push({ level: 'error', message: '回复日期不能早于对应留言的日期。' });
+    }
+  }
+  const displayed = findings.length > 1 ? findings.filter((finding) => finding.level !== 'success') : findings;
+  renderFindings(document, byId('check-results'), displayed);
+  byId('check-panel').hidden = false;
+  return displayed;
+}
+
+byId('check').addEventListener('click', async () => {
+  if (busy) return;
+  setBusy(true);
+  try { await checkDocument(await prepareDocument()); }
+  catch (error) { renderFindings(document, byId('check-results'), [{ level: 'error', message: errorMessage(error) }]); byId('check-panel').hidden = false; }
+  finally { setBusy(false); }
+});
 
 byId('download').addEventListener('click', async () => {
   if (busy) return;
@@ -329,14 +387,10 @@ form.addEventListener('submit', async (event) => {
   setBusy(true);
   try {
     const document = await prepareDocument();
-    if (document.metadata.message) {
-      const parentPath = `src/content/guestbook/${document.metadata.message}.md`;
-      const sha = snapshot.entries.get(parentPath);
-      if (!sha) throw new Error('仓库里还没有这条留言，请先发布留言，再发布回复。');
-      const parent = parseDocument(base64ToText(await publisher.read(sha)));
-      if (document.metadata.date < parent.metadata.date) throw new Error('回复日期不能早于对应留言的日期。');
-    }
-    planned = { document, assets: activeAssets(document.source).filter((asset) => !asset.published) };
+    const findings = await checkDocument(document);
+    if (findings.some((finding) => finding.level === 'error')) { status('发布前检查发现需要修改的问题，请处理后再发布。'); return; }
+    renderFindings(window.document, byId('publish-checks'), findings);
+    planned = { document, assets: activeAssets(document.source).filter((asset) => !asset.published), version: draftVersion };
     byId('publish-summary').textContent = `${editPath ? '更新' : '新增'}「${document.metadata.title || '博主回复'}」，附带 ${planned.assets.length} 个媒体文件。${document.metadata.draft ? '这份内容设为草稿，暂不出现在公开列表中。' : ''}`;
     byId('publish-dialog').showModal();
   } catch (error) { status(errorMessage(error)); }
@@ -346,6 +400,7 @@ form.addEventListener('submit', async (event) => {
 byId('confirm-publish').addEventListener('click', async () => {
   if (!publisher || !planned || busy) return;
   byId('publish-dialog').close();
+  if (planned.version !== draftVersion) { planned = null; status('内容已有变化，请重新检查再发布。'); return; }
   setBusy(true);
   status('正在准备发布…');
   try {
@@ -354,6 +409,9 @@ byId('confirm-publish').addEventListener('click', async () => {
     const saved = await publisher.publish({ snapshot, document: planned.document, assets: uploads, existing: Boolean(editPath), expectedSha: loadedSha, onProgress: status });
     editPath = planned.document.path;
     originalMetadata = planned.document.metadata;
+    const cached = checkCatalog.findIndex((entry) => entry.path === editPath);
+    const updated = { path: editPath, collections: originalMetadata.collections || [] };
+    if (cached >= 0) checkCatalog[cached] = updated; else checkCatalog.push(updated);
     loadedSha = saved.documentSha;
     for (const asset of planned.assets) asset.published = true;
     dirty = false;
@@ -373,7 +431,10 @@ byId('confirm-publish').addEventListener('click', async () => {
 });
 
 byId('new').addEventListener('click', newDocument);
+byId('add-collection').addEventListener('click', () => editorial.add());
+byId('category').addEventListener('change', () => { showFields(); contentChanged(); });
 byId('files').addEventListener('change', () => void addFiles(byId('files').files));
+byId('cover-file').addEventListener('change', () => void addFiles(byId('cover-file').files, true));
 body.addEventListener('dragover', (event) => { if (event.dataTransfer.types.includes('Files')) event.preventDefault(); });
 body.addEventListener('drop', (event) => {
   if (!event.dataTransfer.files.length) return;
@@ -421,13 +482,14 @@ async function initialize() {
     if (record) {
       const restored = restoreDraft(record);
       for (const [name, value] of Object.entries(restored.fields)) {
-        if (name === 'editPath') continue;
+        if (['editPath', 'placements', 'collections'].includes(name)) continue;
         if (name === 'draft') byId(name).checked = value;
         else byId(name).value = value;
       }
       editPath = restored.fields.editPath;
       loadedSha = restored.loadedSha;
       originalMetadata = restored.originalMetadata;
+      editorial.set(restored.fields);
       assets = restored.assets;
       dirty = restored.dirty;
       renderAssets();

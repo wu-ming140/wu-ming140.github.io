@@ -1,0 +1,21 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { posts } from '../../lib/posts';
+import { collectTags } from '../../lib/post-meta.mjs';
+import { localPath } from '../../site';
+const tags = collectTags(posts);
+---
+<SiteLayout title="标签" active="tags" description="沿着一个关键词，看看相关的文字和作品。">
+  <header class="page-header container"><p class="eyebrow">换一种方式逛小站</p><h1>散落的关键词</h1><p>专栏整理不同方向，标签把相近的想法连在一起。</p></header>
+  <section class="archive container" aria-label="全部标签">
+    <div class="section-head"><h2 class="section-title">全部标签</h2><span class="archive-count">共 {tags.length} 个</span></div>
+    <ul class="tag-cloud">{tags.map(({ tag, slug, count }) => <li><a href={localPath(`tags/${slug}/`)}><span># {tag}</span><span>{count} 篇</span></a></li>)}</ul>
+    {tags.length === 0 && <p class="empty-state">这里还没有标签。在写作台为文章添加标签后，它们就会出现在这里。</p>}
+  </section>
+</SiteLayout>
+<style>
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 14px; margin: 28px 0; padding: 0; list-style: none; }
+  .tag-cloud a { display: flex; align-items: center; gap: 24px; padding: 16px 20px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 13px; }
+  .tag-cloud a:hover { color: var(--accent); border-color: #c7b5f260; }
+  .tag-cloud a > span:last-child { color: var(--dim); font-size: 11px; }
+</style>

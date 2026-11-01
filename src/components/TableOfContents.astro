@@ -1,0 +1,32 @@
+---
+import type { MarkdownHeading } from 'astro';
+interface Props { headings: MarkdownHeading[] }
+const headings = Astro.props.headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+{headings.length > 0 && <aside class="article-toc" aria-label="文章目录">
+  <details open data-article-toc>
+    <summary>本文目录 <span aria-hidden="true">↕</span></summary>
+    <nav aria-label="本文章节"><ol>{headings.map((heading) => <li class:list={{ 'toc-subheading': heading.depth === 3 }}><a href={`#${encodeURIComponent(heading.slug)}`}>{heading.text}</a></li>)}</ol></nav>
+  </details>
+</aside>}
+<script>
+  import { initToc } from '../lib/toc.mjs';
+  initToc(document);
+</script>
+<style is:global>
+  .article-toc { grid-column: 2; grid-row: 1; align-self: start; position: sticky; top: 30px; min-width: 0; font-size: 12px; }
+  .article-toc details { border-left: 1px solid var(--line); padding-left: 22px; }
+  .article-toc summary { color: var(--muted); cursor: pointer; font-size: 12px; }
+  .article-toc summary span { color: var(--dim); margin-left: 12px; }
+  .article-toc nav { display: block; max-height: 65vh; overflow-y: auto; margin-top: 18px; }
+  .article-toc ol { padding: 0; margin: 0; list-style: none; }
+  .article-toc li { margin: 10px 0; }
+  .article-toc a { display: block; color: var(--dim); line-height: 1.7; overflow-wrap: anywhere; padding: 2px 0; }
+  .article-toc a:hover, .article-toc a[aria-current='location'] { color: var(--accent); }
+  .article-toc .toc-subheading { padding-left: 14px; font-size: 11px; }
+  @media (max-width: 1050px) {
+    .article-toc { position: static; margin-bottom: 32px; }
+    .article-toc details { border: 1px solid var(--line); border-radius: 4px; padding: 15px 18px; }
+    .article-toc nav { max-height: 300px; }
+  }
+</style>

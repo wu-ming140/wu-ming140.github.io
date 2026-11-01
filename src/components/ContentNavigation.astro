@@ -1,0 +1,45 @@
+---
+import type { CatalogEntry } from '../lib/catalog';
+import { collectionGroups, neighbors, relatedEntries, boardEntries } from '../lib/editorial.mjs';
+import { localPath } from '../site';
+import ContentLink from './ContentLink.astro';
+interface Props { current: CatalogEntry; entries: CatalogEntry[] }
+const { current, entries } = Astro.props;
+const groups = collectionGroups(entries).filter((group) => group.items.some((entry) => entry.id === current.id));
+const adjacent = neighbors(current.type === 'article' ? entries.filter((entry) => entry.type === 'article') : boardEntries(entries, current.type === 'question' ? 'questions' : 'messages'), current);
+const navigationLabel = current.type === 'article' ? '文章与作品' : current.label;
+const related = relatedEntries(current, entries);
+---
+<div class="content-navigation">
+  {groups.map((group) => {
+    const index = group.items.findIndex((item) => item.id === current.id);
+    const previous = group.items[index - 1];
+    const next = group.items[index + 1];
+    return <section class="collection-player" aria-label={`合集：${group.name}`}>
+      <div class="section-head"><h2 class="section-title">合集 · <a href={localPath(`collections/${group.slug}/`)}>{group.name} ↗</a></h2><span class="section-caption">{index + 1} / {group.items.length}</span></div>
+      <details open><summary>查看合集内容</summary><ol>{group.items.map((item) => <li><a href={item.url} aria-current={item.id === current.id ? 'page' : undefined}><span>{item.order}</span>{item.title}</a></li>)}</ol></details>
+      <div class="neighbor-links">{previous && <a href={previous.url}><span>← 合集上一项</span>{previous.title}</a>}{next && <a href={next.url}><span>合集下一项 →</span>{next.title}</a>}</div>
+    </section>;
+  })}
+  {(adjacent.previous || adjacent.next) && <nav class="neighbor-links" aria-label="上一篇与下一篇">
+    {adjacent.previous && <a href={adjacent.previous.url}><span>← 上一篇 · {navigationLabel}</span>{adjacent.previous.title}</a>}
+    {adjacent.next && <a href={adjacent.next.url}><span>下一篇 · {navigationLabel} →</span>{adjacent.next.title}</a>}
+  </nav>}
+  {related.length > 0 && <section class="related-content" aria-label="相关内容"><div class="section-head"><h2 class="section-title">接着读一读</h2><span class="section-caption">相关主题与同板块内容</span></div><div class="content-link-grid">{related.map((entry) => <ContentLink entry={entry} />)}</div></section>}
+</div>
+<style is:global>
+  .content-navigation { margin-top: 48px; }
+  .content-navigation > * + * { margin-top: 32px; }
+  .neighbor-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .neighbor-links > a { min-width: 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; overflow-wrap: anywhere; }
+  .neighbor-links > a:hover { border-color: #c7b5f25a; color: var(--accent); }
+  .neighbor-links span { display: block; color: var(--dim); font-size: 10px; margin-bottom: 8px; }
+  .collection-player { padding: 22px; border: 1px solid var(--line); border-radius: 5px; }
+  .collection-player details { margin-top: 18px; }
+  .collection-player summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .collection-player ol { list-style: none; max-height: 320px; overflow: auto; padding: 0; margin: 14px 0 20px; }
+  .collection-player li a { display: flex; gap: 14px; padding: 9px 10px; font-size: 12px; color: var(--muted); }
+  .collection-player li a[aria-current='page'] { color: var(--accent); background: #c7b5f20c; }
+  .collection-player li span { color: var(--dim); min-width: 20px; }
+  @media (max-width: 560px) { .neighbor-links { grid-template-columns: 1fr; } .collection-player { padding: 16px; } }
+</style>

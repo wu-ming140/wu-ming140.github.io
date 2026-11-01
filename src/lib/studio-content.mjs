@@ -5,6 +5,9 @@ import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import remarkGuestbook, { validDate, safeMarkdownUrl } from './guestbook-rules.mjs';
 import remarkMedia from './media.mjs';
+import { normalizeTags, normalizeCover } from './post-meta.mjs';
+import { normalizePlacements, normalizeCollections, availableBoards } from './editorial.mjs';
+import { resolveColumn } from './column-data.mjs';
 
 export function contentKind(path) {
   if (/^src\/pages\/posts\/[^/\\]+\.md$/.test(path) && !path.endsWith('/index.md')) return 'article';
@@ -43,6 +46,14 @@ export function buildDocument(fields, originalMetadata = {}) {
     metadata.description = fields.description.trim();
     metadata.pubDate = fields.date;
     metadata.category = fields.category;
+    const tags = normalizeTags(fields.tags ?? metadata.tags);
+    if (tags.length) metadata.tags = tags;
+    else delete metadata.tags;
+    const cover = normalizeCover(fields.cover ?? metadata.cover);
+    if (cover) {
+      metadata.cover = cover;
+      metadata.coverAlt = String(fields.coverAlt ?? metadata.coverAlt ?? '').trim().slice(0, 160);
+    } else { delete metadata.cover; delete metadata.coverAlt; }
   } else if (type === 'reply') {
     directory = 'src/content/replies';
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fields.message.trim())) throw new Error('请填写要回复的留言文件名，不含 .md。');
@@ -65,6 +76,16 @@ export function buildDocument(fields, originalMetadata = {}) {
   if (type !== 'article' && typeof fields.draft === 'boolean') metadata.draft = fields.draft;
   const path = fields.editPath || `${directory}/${name}.md`;
   if (contentKind(path) !== (type === 'question' ? 'message' : type)) throw new Error('内容类型与文件位置不一致，请重新选择。');
+  if (type !== 'reply') {
+    const placements = normalizePlacements(fields.placements ?? metadata.placements);
+    // 文章改专栏或留言改类型后，不将原板块的设置自动转移到新板块。
+    const column = type === 'article' ? resolveColumn(fields.category).slug : '';
+    const allowed = availableBoards(type, column, metadata.channel);
+    const chosen = Object.fromEntries(Object.entries(placements).filter(([board]) => allowed.includes(board)));
+    if (Object.keys(chosen).length) metadata.placements = chosen; else delete metadata.placements;
+    const collections = normalizeCollections(fields.collections ?? metadata.collections);
+    if (collections.length) metadata.collections = collections; else delete metadata.collections;
+  }
   const yaml = dump(metadata, { schema: JSON_SCHEMA, lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: true });
   return { path, metadata, body, source: `---\n${yaml}---\n\n${body}\n` };
 }

@@ -1,13 +1,19 @@
 import type { MarkdownInstance } from 'astro';
 import { getPostColumn } from './columns';
+import { normalizeTags, normalizeCover } from './post-meta.mjs';
 
 export interface PostData {
   title: string;
   description?: string;
-  pubDate: string;
+  pubDate: string | Date;
   category?: string;
   draft?: boolean;
   sample?: boolean;
+  tags?: string[] | string;
+  cover?: string;
+  coverAlt?: string;
+  placements?: Record<string, { pinned?: boolean; featured?: boolean }>;
+  collections?: { name: string; order?: number }[];
 }
 
 const modules = import.meta.glob<MarkdownInstance<PostData>>('../pages/posts/*.md', {
@@ -16,7 +22,7 @@ const modules = import.meta.glob<MarkdownInstance<PostData>>('../pages/posts/*.m
 
 export const posts = Object.values(modules)
   .filter((post) => !post.frontmatter.draft)
-  .map((post) => ({ ...post, column: getPostColumn(post.frontmatter.category) }))
+  .map((post) => ({ ...post, column: getPostColumn(post.frontmatter.category), tags: normalizeTags(post.frontmatter.tags), cover: normalizeCover(post.frontmatter.cover) }))
   .sort((a, b) => String(b.frontmatter.pubDate).localeCompare(String(a.frontmatter.pubDate)));
 
 export type Post = (typeof posts)[number];

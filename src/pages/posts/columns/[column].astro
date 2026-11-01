@@ -1,6 +1,10 @@
 ---
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import PostRow from '../../../components/PostRow.astro';
+import ProjectCard from '../../../components/ProjectCard.astro';
+import BrowseList from '../../../components/BrowseList.astro';
+import CuratedSection from '../../../components/CuratedSection.astro';
+import { getCatalog } from '../../../lib/catalog';
 import { postColumns, columnPath } from '../../../lib/columns';
 import { posts } from '../../../lib/posts';
 import { localPath } from '../../../site';
@@ -11,6 +15,7 @@ export function getStaticPaths() {
 }
 const { column } = Astro.props;
 const columnPosts = posts.filter((post) => post.column.slug === column.slug);
+const catalog = await getCatalog();
 ---
 <SiteLayout title={column.title} active="home" description={column.description}>
   <header class="page-header container column-header">
@@ -24,8 +29,9 @@ const columnPosts = posts.filter((post) => post.column.slug === column.slug);
       <a href={localPath('#journal')}>全部内容</a>
       {postColumns.map((item) => <a href={localPath(columnPath(item))} aria-current={item.slug === column.slug ? 'page' : undefined}>{item.title}</a>)}
     </nav>
+    <CuratedSection entries={catalog} board={column.slug} />
     <div class="section-head"><h2 class="section-title">这个角落里的记录</h2><span class="archive-count">共 {columnPosts.length} 篇</span></div>
-    {columnPosts.map((post) => <PostRow post={post} />)}
+    <BrowseList layout={column.slug === 'portfolio' ? 'projects' : 'rows'}>{column.slug === 'portfolio' ? columnPosts.map((post) => <ProjectCard post={post} />) : columnPosts.map((post) => <PostRow post={post} />)}</BrowseList>
     {columnPosts.length === 0 && <div class="column-empty"><span aria-hidden="true">✳</span><h2>这里先留一点空白。</h2><p>属于「{column.title}」的第一份记录，还在慢慢酝酿。</p><a class="quiet-link" href={localPath('#columns')}>去大厅其他地方看看 <span class="arrow" aria-hidden="true">→</span></a></div>}
   </section>
 </SiteLayout>

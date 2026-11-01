@@ -1,0 +1,12 @@
+---
+import { tagSlug } from '../lib/post-meta.mjs';
+import { localPath } from '../site';
+interface Props { tags: string[] }
+const { tags } = Astro.props;
+---
+{tags.length > 0 && <ul class="tag-list" aria-label="标签">{tags.map((tag) => <li><a href={localPath(`tags/${tagSlug(tag)}/`)}># {tag}</a></li>)}</ul>}
+<style is:global>
+  .tag-list { display: flex; flex-wrap: wrap; gap: 7px 10px; padding: 0; margin: 14px 0 0; list-style: none; }
+  .tag-list a { display: inline-block; padding: 2px 9px; border: 1px solid #c7b5f21c; border-radius: 3px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+  .tag-list a:hover { color: var(--accent); border-color: #c7b5f260; }
+</style>

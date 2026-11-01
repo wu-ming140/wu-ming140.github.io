@@ -4,7 +4,7 @@ import { messageStatus, messageSource, type GuestbookMessage } from '../lib/gues
 interface Props { message: GuestbookMessage }
 const { message } = Astro.props;
 ---
-<article class="message-card" data-kind={message.data.kind} data-channel={message.data.channel} data-answered={String(message.replies.length > 0)}>
+<article class="message-card" data-entry-date={message.data.date} data-entry-id={message.id} data-kind={message.data.kind} data-channel={message.data.channel} data-answered={String(message.replies.length > 0)}>
   <div class="message-meta">
     <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
     <span class:list={['message-status', { answered: message.replies.length > 0 }]}>{messageStatus(message)}</span>

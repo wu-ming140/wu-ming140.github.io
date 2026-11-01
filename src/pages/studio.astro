@@ -3,9 +3,13 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import { site, localPath } from '../site';
 import { postColumns } from '../lib/columns';
 import '../styles/studio.css';
+import { getCatalog } from '../lib/catalog';
+import { collectionGroups } from '../lib/editorial.mjs';
+const catalog = await getCatalog();
+const collectionNames = collectionGroups(catalog).map((group) => group.name);
 ---
 <SiteLayout title="写作台" noindex hideViewCount description="在这里写下文字，插入图片与视频，预览并发布到小站。">
-  <div class="studio container" id="studio" data-repository={site.repository} data-branch={site.branch} data-author={site.shortName} data-site={Astro.site?.origin}>
+  <div class="studio container" id="studio" data-repository={site.repository} data-branch={site.branch} data-author={site.shortName} data-site={Astro.site?.origin} data-catalog={JSON.stringify(catalog.map((entry) => ({ path: entry.path, collections: entry.collections })))}>
     <header class="studio-header">
       <a class="back-link" href={localPath()}>← 返回大厅</a>
       <p class="eyebrow">小站写作台</p><h1>把喜欢，放进文字里。</h1>
@@ -44,11 +48,24 @@ import '../styles/studio.css';
         <label>日期<input id="studio-date" type="date" required /></label>
         <label data-for="article">专栏<select id="studio-category">{postColumns.map((column) => <option value={column.aliases[0]}>{column.title}</option>)}</select></label>
         <label data-for="article">一句话简介<input id="studio-description" placeholder="介绍一下这篇内容" /></label>
+        <label data-for="article">标签<input id="studio-tags" placeholder="例如：编程，学习笔记，日常" /><span class="studio-hint">多个标签用逗号分隔，最多 12 个。发布后自动生成标签页。</span></label>
+        <label data-for="article">封面图片路径或网址<input id="studio-cover" placeholder="/media/project/cover.jpg 或 https://…" /><span class="studio-hint">可选。作品集会用它展示卡片，其他文章也可以设置封面。</span></label>
+        <label data-for="article">封面说明<input id="studio-coverAlt" maxlength="160" placeholder="例如：小工具的首页截图" /></label>
+        <div data-for="article" class="studio-cover-tools"><label class="studio-file-button" for="studio-cover-file">选择封面图片<input id="studio-cover-file" type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" /></label><p class="studio-hint">可直接选本机图片，随正文一起保存和发布。清空封面地址即可取消封面。</p></div>
         <label data-for="message question">昵称<input id="studio-author" maxlength="40" value={site.shortName} /></label>
         <label data-for="message question">来源<input id="studio-source" maxlength="40" placeholder="例如：博主自留、微信、QQ" /></label>
         <label data-for="reply" hidden>回复哪条留言<input id="studio-message" list="studio-messages" placeholder="例如 2026-11-01-wechat-01，不带 .md" /><datalist id="studio-messages"></datalist></label>
         <label data-for="message question reply" class="studio-checkbox" hidden><input id="studio-draft" type="checkbox" />先保存为草稿，暂不出现在公开列表中</label>
       </div>
+      <section class="studio-editorial" data-for="article message question" aria-label="置顶与精选">
+        <h2>置顶与精选</h2><p class="studio-hint">每个板块独立设置，在各自板块的专门栏目中展示。取消勾选后重新发布即可取消；不会改变其他板块的选择。</p>
+        <div id="studio-placements"></div>
+      </section>
+      <section class="studio-editorial" data-for="article message question" aria-label="加入合集">
+        <h2>加入合集</h2><p class="studio-hint">同名合集可以串起文章、留言和提问。填写顺序号安排阅读顺序；移除这一行后发布，就会退出该合集。</p>
+        <div id="studio-collections"></div><datalist id="studio-collection-names">{collectionNames.map((name) => <option value={name} />)}</datalist>
+        <button type="button" id="studio-add-collection">再加入一个合集</button>
+      </section>
       <div class="studio-toolbar">
         <label class="studio-file-button" for="studio-files">插入图片 / 视频<input id="studio-files" type="file" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.avif,.mp4,.webm,.ogv" /></label>
         <button type="button" id="studio-insert-url">插入媒体网址</button>
@@ -57,13 +74,15 @@ import '../styles/studio.css';
       <p class="studio-hint">也可以把图片、视频拖到正文框，或粘贴截图。附件会随草稿保存在本机，点击发布后才上传。预览中的图片也可以点击放大。</p>
       <div class="studio-editor-grid">
         <label class="studio-editor-label">写正文<textarea id="studio-body" rows="20" placeholder="写下你的文字……&#10;&#10;选择文件后，图片或视频会插入光标所在的位置。也支持标题、列表和 Markdown 写法。"></textarea></label>
-        <section class="studio-preview-panel" aria-label="正文预览"><h2>看看效果</h2><p id="studio-preview-error" role="status" hidden></p><div id="studio-preview" class="prose"><p class="studio-empty">你的文字、图片和视频会显示在这里。</p></div></section>
+        <section class="studio-preview-panel" aria-label="正文预览"><h2>看看效果</h2><p id="studio-preview-error" role="status" hidden></p><div id="studio-cover-preview" class="prose studio-cover-preview" hidden><img id="studio-cover-image" alt="" /><p>封面预览</p></div><div id="studio-preview" class="prose"><p class="studio-empty">你的文字、图片和视频会显示在这里。</p></div></section>
       </div>
       <ul id="studio-assets" class="studio-assets" aria-label="已选择的媒体文件"></ul>
       <div class="studio-actions">
+        <button type="button" id="studio-check">发布前检查</button>
         <button type="button" id="studio-download">下载完整草稿</button>
         <button type="submit" id="studio-publish" class="studio-primary" disabled>发布到博客</button>
       </div>
+      <section class="studio-check-panel" id="studio-check-panel" aria-label="发布前检查结果" hidden><h2>发布前检查</h2><p class="studio-hint">核对内容与链接格式，连接仓库后也会核对站内媒体文件。外部链接是否能打开，请在预览中确认。</p><ul id="studio-check-results" aria-live="polite"></ul></section>
       <p class="studio-hint">下载的草稿包包含正文和所用附件，解压到博客文件夹后即可按原来的方式发布。网页发布后，等待网站自动更新。</p>
       <p id="studio-status" class="studio-status" role="status"></p>
       <a id="studio-actions-link" href={`${site.repository}/actions`} target="_blank" rel="noopener noreferrer" hidden>查看网站发布进度 ↗</a>
@@ -85,6 +104,7 @@ import '../styles/studio.css';
     </dialog>
     <dialog id="studio-publish-dialog" class="studio-dialog">
       <h2>把这份内容发布到小站？</h2><p id="studio-publish-summary"></p><p class="studio-hint">正文和附件会一起保存到你的博客仓库，随后自动更新网站。</p>
+      <ul id="studio-publish-checks" class="studio-publish-checks"></ul>
       <div class="studio-actions"><button type="button" data-close-dialog="studio-publish-dialog">再检查一下</button><button type="button" id="studio-confirm-publish" class="studio-primary">确认发布</button></div>
     </dialog>
   </div>

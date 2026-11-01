@@ -1,0 +1,24 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getCatalog } from '../../lib/catalog';
+import { collectionGroups } from '../../lib/editorial.mjs';
+import { localPath } from '../../site';
+const groups = collectionGroups(await getCatalog());
+---
+<SiteLayout title="合集" active="collections" description="把同一个主题的文章、留言和提问，整理成可以顺着阅读的合集。">
+  <header class="page-header container"><p class="eyebrow">一个主题，慢慢展开</p><h1>把记录串成合集。</h1><p>从第一篇开始，也可以挑一段感兴趣的内容读。</p></header>
+  <section class="archive container" aria-label="全部合集">
+    <div class="section-head"><h2 class="section-title">全部合集</h2><span class="archive-count">共 {groups.length} 个</span></div>
+    <div class="collection-grid">{groups.map((group) => <a class="collection-card" href={localPath(`collections/${group.slug}/`)}><span>{group.items.length} 份内容</span><h2>{group.name}</h2><p>从「{group.items[0].title}」开始</p><span>查看合集 ↗</span></a>)}</div>
+    {!groups.length && <p class="empty-state">合集正在慢慢整理。在写作台填写合集名称和顺序号后，就会出现在这里。</p>}
+  </section>
+</SiteLayout>
+<style>
+  .collection-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 26px; }
+  .collection-card { padding: 28px; border: 1px solid var(--line); border-radius: 5px; background: #c7b5f204; }
+  .collection-card:hover { border-color: #c7b5f260; }
+  .collection-card > span { color: var(--dim); font-size: 11px; }
+  .collection-card h2 { margin-top: 24px; font: 400 28px/1.7 var(--serif); overflow-wrap: anywhere; }
+  .collection-card p { margin: 16px 0 24px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 640px) { .collection-grid { grid-template-columns: 1fr; } }
+</style>

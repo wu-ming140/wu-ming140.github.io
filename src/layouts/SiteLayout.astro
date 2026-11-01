@@ -6,7 +6,7 @@ import ImageViewer from '../components/ImageViewer.astro';
 interface Props {
   title?: string;
   description?: string;
-  active?: 'home' | 'guestbook' | 'about';
+  active?: 'home' | 'guestbook' | 'about' | 'search' | 'tags' | 'collections';
   noindex?: boolean;
   hideViewCount?: boolean;
 }
@@ -16,7 +16,10 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const navigation = [
   { key: 'home', label: '大厅', path: '' },
   { key: 'guestbook', label: '留言', path: 'guestbook/' },
+  { key: 'tags', label: '标签', path: 'tags/' },
+  { key: 'collections', label: '合集', path: 'collections/' },
   { key: 'about', label: '关于', path: 'about/' },
+  { key: 'search', label: '搜索', path: 'search/' },
 ];
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
 ---
@@ -36,6 +39,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="zh_CN" />
     <link rel="icon" href={localPath('ming-favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} · 全站动态`} href={new URL(localPath('rss.xml'), Astro.site).href} />
   </head>
   <body>
     <a class="skip-link" href="#main">跳到正文</a>
@@ -63,6 +67,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
         <span>认真生活，慢慢记录。</span>
         {!hideViewCount && <ViewCount scope="site" />}
         <a class="studio-entry" href={localPath('studio/')}>写作台</a>
+        <a class="rss-entry" href={localPath('subscribe/')}>RSS 订阅</a>
         <a href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
@@ -154,6 +159,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
   .footer-bottom { margin-top: 42px; display: flex; gap: 24px; color: var(--dim); font-size: 10px; letter-spacing: .04em; flex-wrap: wrap; }
   .footer-bottom > a { margin-left: auto; }
   .footer-bottom > .studio-entry { margin-left: 0; }
+  .footer-bottom > .rss-entry { margin-left: 0; }
   .footer-bottom a:hover { color: var(--text); }
   .page-header { padding-block: 83px 55px; }
   .page-header h1 { font-family: var(--serif); font-size: clamp(38px, 5vw, 58px); font-weight: 400; line-height: 1.5; margin-top: 25px; }

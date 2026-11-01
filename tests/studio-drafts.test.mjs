@@ -11,7 +11,7 @@ function fixture() {
     token: 'secret-never-save',
   });
   return {
-    fields: { type: 'question', name: 'my-question', title: '来自微信的问题', date: '2026-11-01', category: '作品集', description: '说明', author: '无暝', source: '微信', message: '', draft: true, body: '问题与回答\n\n![图](/media/2026-11-01/abc-media.png)', editPath: 'src/content/guestbook/my-question.md', token: 'secret-never-save' },
+    fields: { type: 'question', name: 'my-question', title: '来自微信的问题', date: '2026-11-01', category: '作品集', description: '说明', author: '无暝', source: '微信', message: '', draft: true, body: '问题与回答\n\n![图](/media/2026-11-01/abc-media.png)', editPath: 'src/content/guestbook/my-question.md', tags: '编程，笔记', cover: '/media/2026-11-01/abc-media.png', coverAlt: '封面说明', token: 'secret-never-save' },
     loadedSha: 'original-document-sha', originalMetadata: { custom: ['保留原来的属性'], channel: 'other' },
     dirty: true, assets: [asset('png', [0, 1, 128, 255]), asset('mp4', [42, 128, 0, 255, 10], true)],
     token: 'secret-never-save', publisher: { token: 'secret-never-save' }, snapshot: 'connection-only',
@@ -23,6 +23,8 @@ test('IndexedDB restores fields, original revision and exact image/video bytes w
   const first = createDraftSession(storage, 'repo#main');
   assert.equal(await first.read(), undefined);
   const state = fixture();
+  state.fields.placements = { questions: { pinned: true, featured: false }, guestbook: { pinned: false, featured: true } };
+  state.fields.collections = [{ name: '算法问答', order: 2 }];
   const saved = await first.save(state);
   const reopened = createDraftSession(storage, 'repo#main');
   const persisted = await reopened.read();

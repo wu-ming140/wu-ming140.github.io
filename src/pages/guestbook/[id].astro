@@ -4,11 +4,15 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import { site, localPath } from '../../site';
 import { getGuestbook, messageStatus, messageSource } from '../../lib/guestbook';
 import '../../styles/guestbook.css';
+import { getCatalog } from '../../lib/catalog';
+import ContentNavigation from '../../components/ContentNavigation.astro';
 
 export async function getStaticPaths() {
   return (await getGuestbook()).map((message) => ({ params: { id: message.id }, props: { message } }));
 }
 const { message } = Astro.props;
+const catalog = await getCatalog();
+const current = catalog.find((entry) => entry.url === localPath(`guestbook/${message.id}/`));
 const { Content } = await render(message);
 const replies = await Promise.all(message.replies.map(async (reply) => ({
   ...reply, Content: (await render(reply)).Content,
@@ -33,6 +37,7 @@ const replies = await Promise.all(message.replies.map(async (reply) => ({
       {replies.length === 0 && <p class="reply-waiting">{message.data.kind === 'question' ? '问题已经收到了，等我想一想，再来回答。' : '谢谢你留下这句话。回复会出现在这里。'}</p>}
       {replies.map((reply) => <article class="owner-reply"><div class="message-meta"><span class="owner-name">{site.shortName}<span class="owner-badge">博主</span></span><time datetime={reply.data.date}>{reply.data.date}</time></div><div class="prose guestbook-prose"><reply.Content /></div></article>)}
     </section>
+    {current && <ContentNavigation current={current} entries={catalog} />}
     <div class="article-end"><span>谢谢你的声音。</span><a class="quiet-link" href={localPath('guestbook/contribute/')}>我也想说几句 <span class="arrow" aria-hidden="true">→</span></a></div>
   </article>
 </SiteLayout>

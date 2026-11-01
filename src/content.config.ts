@@ -1,6 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { guestbookLoader } from './lib/guestbook-loader';
 import { validDate } from './lib/guestbook-rules.mjs';
+import { normalizePlacements, normalizeCollections } from './lib/editorial.mjs';
 
 const date = z.string().refine(validDate, '请填写真实日期并加引号，例如 "2026-11-01"');
 const id = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, '请使用留言文件名，不含 .md');
@@ -16,6 +17,12 @@ const guestbook = defineCollection({
     source: z.string().trim().min(1).max(40).optional(),
     github: z.string().regex(/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i).optional(),
     draft: z.boolean().default(false),
+    placements: z.record(z.object({ pinned: z.boolean().optional(), featured: z.boolean().optional() }).strict()).optional().transform((value, ctx) => {
+      try { return normalizePlacements(value); } catch (error) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: String(error) }); return z.NEVER; }
+    }),
+    collections: z.array(z.object({ name: z.string(), order: z.number().int().min(1).max(99999).optional() }).strict()).max(12).optional().transform((value, ctx) => {
+      try { return normalizeCollections(value); } catch (error) { ctx.addIssue({ code: z.ZodIssueCode.custom, message: String(error) }); return z.NEVER; }
+    }),
   }).strict(),
 });
 

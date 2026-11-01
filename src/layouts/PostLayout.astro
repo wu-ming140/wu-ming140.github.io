@@ -3,16 +3,29 @@ import SiteLayout from './SiteLayout.astro';
 import ViewCount from '../components/ViewCount.astro';
 import { localPath } from '../site';
 import { getPostColumn, columnPath } from '../lib/columns';
+import type { MarkdownLayoutProps } from 'astro';
+import type { PostData } from '../lib/posts';
+import { normalizeTags, normalizeCover } from '../lib/post-meta.mjs';
+import TagList from '../components/TagList.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import ContentNavigation from '../components/ContentNavigation.astro';
+import { getCatalog } from '../lib/catalog';
+interface Props extends MarkdownLayoutProps<PostData> {}
 // Markdown 的日期建议保留引号，例如 pubDate: "2026-10-30"。
-const { frontmatter } = Astro.props;
+const { frontmatter, headings = [] } = Astro.props;
 const { title, description, category = '随笔', sample = false } = frontmatter;
 const column = getPostColumn(category);
+const tags = normalizeTags(frontmatter.tags);
+const cover = normalizeCover(frontmatter.cover);
+const hasToc = headings.some((heading) => heading.depth === 2 || heading.depth === 3);
+const catalog = await getCatalog();
+const current = catalog.find((entry) => entry.url === frontmatter.url);
 const date = frontmatter.pubDate instanceof Date
   ? frontmatter.pubDate.toISOString().slice(0, 10)
   : String(frontmatter.pubDate).slice(0, 10);
 ---
 <SiteLayout title={title} description={description} active="home">
-  <article class="article-container">
+  <article class:list={['article-container', 'post-page', { 'post-has-toc': hasToc }]}>
     <a class="back-link" href={localPath('#journal')}>← 返回大厅</a>
     <header class="article-header">
       <h1>{title}</h1>
@@ -22,9 +35,26 @@ const date = frontmatter.pubDate instanceof Date
         <ViewCount scope="page" />
       </div>
       {description && <p class="article-description">{description}</p>}
+      <TagList tags={tags} />
     </header>
     {sample && <p class="sample-note">这是一篇随模板提供的示例文章，可以替换成你自己的文字。</p>}
-    <div class="prose"><slot /></div>
+    <div class="article-reading">
+      <TableOfContents headings={headings} />
+      <div class="prose article-body">{cover && <img class="article-cover" src={cover} alt={frontmatter.coverAlt || title} width="1000" height="625" decoding="async" />}<slot /></div>
+    </div>
+    {current && <ContentNavigation current={current} entries={catalog} />}
     <div class="article-end"><span>谢谢你读到这里。</span><a class="quiet-link" href={localPath('#columns')}>再逛逛大厅 <span class="arrow" aria-hidden="true">→</span></a></div>
   </article>
 </SiteLayout>
+<style is:global>
+  .post-has-toc { width: min(1080px, calc(100% - 112px)); }
+  .post-has-toc .article-header { max-width: 740px; }
+  .post-has-toc .article-reading { display: grid; grid-template-columns: minmax(0, 740px) 220px; gap: 50px; }
+  .post-has-toc .article-body { grid-column: 1; grid-row: 1; min-width: 0; }
+  .prose img.article-cover { width: 100%; height: auto; aspect-ratio: 8 / 5; object-fit: cover; }
+  @media (max-width: 1050px) {
+    .post-has-toc { width: min(740px, calc(100% - 112px)); }
+    .post-has-toc .article-reading { display: block; }
+  }
+  @media (max-width: 760px) { .post-has-toc { width: calc(100% - 44px); } }
+</style>

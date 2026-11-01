@@ -1,0 +1,20 @@
+---
+import type { CatalogEntry } from '../lib/catalog';
+interface Props { entry: CatalogEntry }
+const { entry } = Astro.props;
+---
+<article class="content-link">
+  <p>{entry.label} · <time datetime={entry.date}>{entry.date}</time></p>
+  <h3><a href={entry.url}>{entry.title} <span aria-hidden="true">↗</span></a></h3>
+  {entry.description && <p class="content-link-description">{entry.description}</p>}
+</article>
+<style is:global>
+  .content-link { padding: 18px 20px; min-width: 0; border: 1px solid var(--line); border-radius: 4px; background: #c7b5f203; }
+  .content-link > p:first-child { color: var(--dim); font-size: 10px; }
+  .content-link h3 { margin-top: 8px; font: 400 20px/1.7 var(--serif); overflow-wrap: anywhere; }
+  .content-link h3 a:hover { color: var(--accent); }
+  .content-link h3 span { color: var(--accent); font-size: 13px; }
+  .content-link-description { margin-top: 9px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+  .content-link-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+  @media (max-width: 640px) { .content-link-grid { grid-template-columns: 1fr; } }
+</style>
