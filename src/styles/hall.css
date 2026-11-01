@@ -2,6 +2,7 @@
 .hero.home-hero .eyebrow { margin-bottom: 24px; }
 .hero.home-hero h1 { font-size: clamp(36px, 5vw, 64px); line-height: 1.45; }
 .hero.home-hero .hero-description { margin-top: 20px; }
+.home-stats { margin-top: 22px; }
 .hero.home-hero .hero-bottom { margin-top: 34px; }
 .home-hero .hero-orbit { top: 24px; width: 220px; height: 220px; }
 .hall-columns { padding-bottom: 68px; }

@@ -6,9 +6,11 @@ interface Props {
   title?: string;
   description?: string;
   active?: 'home' | 'guestbook' | 'about';
+  noindex?: boolean;
+  hideViewCount?: boolean;
 }
 
-const { title, description = site.description, active = 'home' } = Astro.props;
+const { title, description = site.description, active = 'home', noindex = false, hideViewCount = false } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const navigation = [
   { key: 'home', label: '大厅', path: '' },
@@ -23,6 +25,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#0c0d10" />
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
@@ -57,7 +60,8 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
       <div class="footer-bottom">
         <span>© {new Date().getFullYear()} {site.shortName}</span>
         <span>认真生活，慢慢记录。</span>
-        <ViewCount scope="site" />
+        {!hideViewCount && <ViewCount scope="site" />}
+        <a class="studio-entry" href={localPath('studio/')}>写作台</a>
         <a href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
@@ -147,6 +151,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
   .footer-top p { color: var(--dim); font-size: 12px; }
   .footer-bottom { margin-top: 42px; display: flex; gap: 24px; color: var(--dim); font-size: 10px; letter-spacing: .04em; flex-wrap: wrap; }
   .footer-bottom > a { margin-left: auto; }
+  .footer-bottom > .studio-entry { margin-left: 0; }
   .footer-bottom a:hover { color: var(--text); }
   .page-header { padding-block: 83px 55px; }
   .page-header h1 { font-family: var(--serif); font-size: clamp(38px, 5vw, 58px); font-weight: 400; line-height: 1.5; margin-top: 25px; }
@@ -174,6 +179,10 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
   .prose blockquote { margin: 2em 0; padding: 4px 0 4px 22px; border-left: 2px solid #c7b5f280; color: var(--muted); }
   .prose blockquote p { margin: 0; }
   .prose img { display: block; max-width: 100%; height: auto; margin-block: 1.8em; border-radius: 3px; }
+  .prose video { display: block; width: 100%; max-height: 75vh; margin-block: 1.8em; border: 1px solid var(--line); border-radius: 5px; background: #050608; }
+  .prose .media-figure { margin: 1.8em 0; }
+  .prose .media-figure video { margin-block: 0; }
+  .prose .media-figure figcaption { margin-top: 10px; color: var(--muted); font-size: 12px; text-align: center; }
   .prose pre { overflow-x: auto; padding: 20px; border: 1px solid var(--line); border-radius: 5px; font-size: 13px; line-height: 1.8; margin-bottom: 1.8em; }
   .prose :not(pre) > code { padding: 3px 6px; background: #ffffff09; border-radius: 3px; font-size: .88em; color: #d0bddf; }
   .prose hr { border: 0; border-top: 1px solid var(--line); margin-block: 2.5em; }

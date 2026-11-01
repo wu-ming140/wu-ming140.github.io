@@ -1,0 +1,87 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { site, localPath } from '../site';
+import { postColumns } from '../lib/columns';
+import '../styles/studio.css';
+---
+<SiteLayout title="写作台" noindex hideViewCount description="在这里写下文字，插入图片与视频，预览并发布到小站。">
+  <div class="studio container" id="studio" data-repository={site.repository} data-branch={site.branch} data-author={site.shortName} data-site={Astro.site?.origin}>
+    <header class="studio-header">
+      <a class="back-link" href={localPath()}>← 返回大厅</a>
+      <p class="eyebrow">小站写作台</p><h1>把喜欢，放进文字里。</h1>
+      <p>写文章、展示作品，或给自己留一句话。选择图片和视频，插入正文，再看看它们的样子。</p>
+    </header>
+    <noscript><p class="studio-notice">写作台需要启用 JavaScript。也可以在电脑上编辑 Markdown 文件，再提交发布。</p></noscript>
+
+    <details class="studio-connect">
+      <summary>连接 GitHub，直接发布</summary>
+      <p>使用你的博客仓库权限发布。<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">创建专用凭证 ↗</a>，选择当前博客仓库，将仓库权限中的 <strong>Contents</strong> 设为 <strong>Read and write</strong>。</p>
+      <p class="studio-hint">凭证仅用于本页连接 GitHub，不保存到浏览器或草稿包；刷新后需要重新连接。不连接也能写作、预览和下载草稿。</p>
+      <div class="studio-connection-row">
+        <label for="studio-token">GitHub 发布凭证<input id="studio-token" type="password" autocomplete="off" spellcheck="false" placeholder="粘贴你的专用凭证" /></label>
+        <button type="button" id="studio-connect">连接我的仓库</button>
+        <button type="button" id="studio-disconnect" hidden>断开连接</button>
+      </div>
+      <p id="studio-connection-status" role="status">尚未连接</p>
+    </details>
+
+    <div class="studio-existing">
+      <label for="studio-existing">编辑已有内容<select id="studio-existing" disabled><option value="">连接仓库后可以载入已发布的内容</option></select></label>
+      <button type="button" id="studio-load" disabled>载入编辑</button>
+      <button type="button" id="studio-new">新建内容</button>
+    </div>
+
+    <form id="studio-form">
+      <div class="studio-fields">
+        <label>内容类型<select id="studio-type"><option value="article">文章 / 作品集</option><option value="message">我的留言</option><option value="question">其他渠道的提问</option><option value="reply">博主回复</option></select></label>
+        <label>文件名<input id="studio-name" required spellcheck="false" placeholder="例如 my-first-project" /><span class="studio-hint">使用小写英文字母、数字和连字符；编辑已有内容时保留原文件名。</span></label>
+        <label data-for="article message question">标题<input id="studio-title" maxlength="80" placeholder="给这份内容取个名字" /></label>
+        <label>日期<input id="studio-date" type="date" required /></label>
+        <label data-for="article">专栏<select id="studio-category">{postColumns.map((column) => <option value={column.aliases[0]}>{column.title}</option>)}</select></label>
+        <label data-for="article">一句话简介<input id="studio-description" placeholder="介绍一下这篇内容" /></label>
+        <label data-for="message question">昵称<input id="studio-author" maxlength="40" value={site.shortName} /></label>
+        <label data-for="message question">来源<input id="studio-source" maxlength="40" placeholder="例如：博主自留、微信、QQ" /></label>
+        <label data-for="reply" hidden>回复哪条留言<input id="studio-message" list="studio-messages" placeholder="例如 2026-11-01-wechat-01，不带 .md" /><datalist id="studio-messages"></datalist></label>
+        <label data-for="message question reply" class="studio-checkbox" hidden><input id="studio-draft" type="checkbox" />先保存为草稿，暂不出现在公开列表中</label>
+      </div>
+      <div class="studio-toolbar">
+        <label class="studio-file-button" for="studio-files">插入图片 / 视频<input id="studio-files" type="file" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.avif,.mp4,.webm,.ogv" /></label>
+        <button type="button" id="studio-insert-url">插入媒体网址</button>
+        <span class="studio-hint">单个文件不超过 20 MB，总计不超过 50 MB。长视频可以使用视频直链。</span>
+      </div>
+      <p class="studio-hint">也可以把图片、视频拖到正文框，或粘贴截图。文件会先留在本页，点击发布后才上传。</p>
+      <div class="studio-editor-grid">
+        <label class="studio-editor-label">写正文<textarea id="studio-body" rows="20" placeholder="写下你的文字……&#10;&#10;选择文件后，图片或视频会插入光标所在的位置。也支持标题、列表和 Markdown 写法。"></textarea></label>
+        <section class="studio-preview-panel" aria-label="正文预览"><h2>看看效果</h2><p id="studio-preview-error" role="status" hidden></p><div id="studio-preview" class="prose"><p class="studio-empty">你的文字、图片和视频会显示在这里。</p></div></section>
+      </div>
+      <ul id="studio-assets" class="studio-assets" aria-label="已选择的媒体文件"></ul>
+      <div class="studio-actions">
+        <button type="button" id="studio-download">下载完整草稿</button>
+        <button type="submit" id="studio-publish" class="studio-primary" disabled>发布到博客</button>
+      </div>
+      <p class="studio-hint">下载的草稿包包含正文和所用附件，解压到博客文件夹后即可按原来的方式发布。网页发布后，等待网站自动更新。</p>
+      <p id="studio-status" class="studio-status" role="status"></p>
+      <a id="studio-actions-link" href={`${site.repository}/actions`} target="_blank" rel="noopener noreferrer" hidden>查看网站发布进度 ↗</a>
+    </form>
+
+    <details class="studio-help"><summary>在电脑里编辑时，怎样插入图片和视频？</summary>
+      <p>把文件放进博客的 <code>public/media/</code> 文件夹，在文章、留言或回复正文里写：</p>
+      <pre><code>![这张图片的说明](/media/photo.jpg){'\n\n'}![这段视频的说明](/media/demo.mp4)</code></pre>
+      <p>图片会直接展示；MP4、WebM、OGV 视频会显示播放器。每个图片或视频前后空一行即可。外部图片、视频文件的完整网址也可以放进括号里。</p>
+    </details>
+
+    <dialog id="studio-url-dialog" class="studio-dialog">
+      <form method="dialog" id="studio-url-form"><h2>插入图片或视频网址</h2>
+        <label>说明<input id="studio-url-label" placeholder="图片或视频的内容" /></label>
+        <label>媒体文件网址<input id="studio-url-value" type="url" required placeholder="https://example.com/demo.mp4" /></label>
+        <p class="studio-hint">使用能直接打开图片或视频文件的网址。B 站等视频页面可以作为普通链接写进正文。</p>
+        <div class="studio-actions"><button type="button" data-close-dialog="studio-url-dialog">取消</button><button type="submit" class="studio-primary">插入正文</button></div>
+      </form>
+    </dialog>
+    <dialog id="studio-publish-dialog" class="studio-dialog">
+      <h2>把这份内容发布到小站？</h2><p id="studio-publish-summary"></p><p class="studio-hint">正文和附件会一起保存到你的博客仓库，随后自动更新网站。</p>
+      <div class="studio-actions"><button type="button" data-close-dialog="studio-publish-dialog">再检查一下</button><button type="button" id="studio-confirm-publish" class="studio-primary">确认发布</button></div>
+    </dialog>
+  </div>
+  <script>import '../scripts/studio.js';</script>
+</SiteLayout>

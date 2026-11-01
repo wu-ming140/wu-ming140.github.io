@@ -30,7 +30,7 @@ createUrl.searchParams.set('value', template);
       <li><h2>提交给我</h2><p>保存到你 Fork 的仓库，然后向原仓库的 <code>{site.branch}</code> 分支发起 Pull Request（合并请求）。如果在电脑上写，先把文件放进 <code>src/content/guestbook/</code>，提交并推送到你的 Fork，再发起合并请求。</p><p><a href={`${site.repository}/fork`} target="_blank" rel="noopener noreferrer">Fork 仓库 ↗</a> · <a href={`${site.repository}/compare`} target="_blank" rel="noopener noreferrer">发起合并请求 ↗</a> · <a href={`${site.repository}/blob/${site.branch}/CONTRIBUTING.md`} target="_blank" rel="noopener noreferrer">完整填写说明 ↗</a></p></li>
       <li><h2>等一封回信</h2><p>我审核并合并后，来信会在网站更新后出现在留言页。如果我作了回复，你可以在这条留言的详情里看到。提问会标记为「待回答」或「已回答」。</p></li>
     </ol>
-    <p class="contribute-note">可以使用段落、标题、列表、引用、代码块和 Markdown 链接。请使用完整网址或以 / 开头的站内链接。留言不支持 HTML。只需新增自己的留言文件，博主回复由我来补充。</p>
+    <p class="contribute-note">可以使用段落、标题、列表、引用、代码块和 Markdown 链接。图片用 <code>![图片说明](/media/photo.jpg)</code>，视频用 <code>![视频说明](/media/demo.mp4)</code>，文件放在 <code>public/media/</code> 并随来信提交。请使用完整网址或以 / 开头的站内链接。留言不支持手写 HTML。博主回复由我来补充。</p>
   </article>
 <script>
   const button = document.querySelector<HTMLButtonElement>('.copy-template');

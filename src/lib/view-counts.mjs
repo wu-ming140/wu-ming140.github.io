@@ -1,8 +1,12 @@
-// 不蒜子公开脚本所使用的 JSONP 接口；一次请求同时返回全站和当前页浏览量。
-// https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js
+// 与 Vercount 公开脚本使用同一个 API；一次请求同时返回全站和当前页浏览量。
+// https://events.vercount.one/js
 const initialized = new WeakSet();
 
-export function initViewCounts(doc = document, win = window) {
+export async function initViewCounts(doc = document, win = window) {
+  if (doc.readyState === 'loading') {
+    doc.addEventListener('DOMContentLoaded', () => initViewCounts(doc, win), { once: true });
+    return;
+  }
   const counters = [...doc.querySelectorAll('[data-view-count]')];
   if (!counters.length || initialized.has(doc)) return;
   initialized.add(doc);
@@ -20,34 +24,41 @@ export function initViewCounts(doc = document, win = window) {
     return;
   }
 
-  const callback = `BusuanziCallback_${win.crypto.randomUUID().replaceAll('-', '')}`;
-  const script = doc.createElement('script');
-  let finished = false;
+  showState('加载中…', '正在获取浏览量');
+  let expired = false;
   let timeout;
-
-  function finish(data) {
-    if (finished) return;
-    finished = true;
-    win.clearTimeout(timeout);
-    script.remove();
-    // 保留空回调，以便已经开始执行的迟到响应不会抛错或覆盖超时状态。
-    win[callback] = () => {};
+  try {
+    const controller = new win.AbortController();
+    timeout = win.setTimeout(() => {
+      expired = true;
+      controller.abort();
+      showState('暂不可用', '浏览量加载超时，请稍后刷新重试');
+    }, 10000);
+    // 明确传入正式页面地址，避免跨站 Referrer 策略丢失文章路径。
+    // 忽略查询参数和锚点，确保同一篇文章的分享链接共用计数。
+    const url = new URL(win.location.pathname, counters[0].dataset.countOrigin);
+    const response = await win.fetch('https://events.vercount.one/api/v2/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.href, isNewUv: false }),
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error('View count request failed');
+    const result = await response.json();
+    if (expired) return;
+    if (result?.status !== 'success' || !result.data) throw new Error('Invalid view count response');
     for (const counter of counters) {
-      const value = data?.[counter.dataset.viewCount];
+      const value = result.data[counter.dataset.viewCount];
       const valid = Number.isSafeInteger(value) && value >= 0;
       counter.querySelector('[data-count-value]').textContent = valid
         ? `${value.toLocaleString('zh-CN')} 次` : '暂不可用';
-      counter.title = valid ? '浏览量由不蒜子提供，按页面访问次数统计' : '浏览量服务暂不可用，请稍后再试';
+      counter.title = valid ? '浏览量由 Vercount 提供，按页面访问次数统计' : '浏览量服务暂不可用，请稍后再试';
     }
+  } catch {
+    if (!expired) showState('暂不可用', '浏览量服务暂不可用，请稍后刷新重试');
+  } finally {
+    win.clearTimeout(timeout);
   }
-
-  win[callback] = finish;
-  script.async = true;
-  // 与官方脚本相同，仅此请求携带页面路径，用来区分文章；不修改全站策略。
-  script.referrerPolicy = 'no-referrer-when-downgrade';
-  script.src = `https://busuanzi.ibruce.info/busuanzi?jsonpCallback=${callback}`;
-  script.onerror = () => finish();
-  script.onload = () => { if (!finished) finish(); };
-  timeout = win.setTimeout(() => finish(), 10000);
-  doc.head.appendChild(script);
 }

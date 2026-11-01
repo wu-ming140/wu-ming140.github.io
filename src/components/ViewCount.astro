@@ -3,19 +3,24 @@ import { site } from '../site';
 
 interface Props {
   scope: 'site' | 'page';
+  prominent?: boolean;
 }
 
-const { scope } = Astro.props;
+const { scope, prominent = false } = Astro.props;
 ---
 {site.viewCounts && Astro.site && (
-  <span class="view-count" data-view-count={scope === 'site' ? 'site_pv' : 'page_pv'}
+  <span class:list={['view-count', { prominent }]} data-view-count={scope === 'site' ? 'site_pv' : 'page_pv'}
     data-count-origin={Astro.site.origin} title="浏览量加载中">
-    {scope === 'site' ? '全站浏览' : '阅读'}
-    <span data-count-value aria-live="polite">—</span>
+    {scope === 'site' ? '博客总浏览量' : '阅读'}
+    <span data-count-value aria-live="polite">加载中…</span>
+    <noscript>（请启用 JavaScript 查看）</noscript>
   </span>
 )}
 
 <style>
   .view-count { display: inline-flex; align-items: baseline; gap: .5em; }
   [data-count-value] { font-variant-numeric: tabular-nums; }
+  .prominent { flex-wrap: wrap; gap: .6em 1em; padding: 10px 16px; border: 1px solid var(--line); border-radius: 5px; background: #c7b5f205; color: var(--muted); font-size: 12px; }
+  .prominent [data-count-value] { color: var(--accent); }
+  noscript { color: var(--dim); font-size: 11px; }
 </style>

@@ -5,6 +5,7 @@ import { site, localPath } from '../site';
 import { posts } from '../lib/posts';
 import { postColumns, columnPath } from '../lib/columns';
 import PostRow from '../components/PostRow.astro';
+import ViewCount from '../components/ViewCount.astro';
 import '../styles/hall.css';
 ---
 <!-- 下面是网页结构。SiteLayout 统一提供导航、页脚和样式。 -->
@@ -17,6 +18,7 @@ import '../styles/hall.css';
       <span class="second-line">{site.headline[1]}</span>
     </h1>
     <p class="hero-description">{site.intro}</p>
+    <div class="home-stats"><ViewCount scope="site" prominent /></div>
     <div class="hero-bottom">
       <a class="quiet-link" href="#columns">逛逛五个角落 <span class="arrow" aria-hidden="true">↗</span></a>
       <span class="hero-note">生活 · 文字 · 一点点喜欢</span>
