@@ -1,6 +1,8 @@
 import type { MarkdownInstance } from 'astro';
 import { getPostColumn } from './columns';
 import { normalizeTags, normalizeCover } from './post-meta.mjs';
+import { comparePublicationDates } from './publication-date.mjs';
+export { dateParts } from './publication-date.mjs';
 
 export interface PostData {
   title: string;
@@ -23,11 +25,6 @@ const modules = import.meta.glob<MarkdownInstance<PostData>>('../pages/posts/*.m
 export const posts = Object.values(modules)
   .filter((post) => !post.frontmatter.draft)
   .map((post) => ({ ...post, column: getPostColumn(post.frontmatter.category), tags: normalizeTags(post.frontmatter.tags), cover: normalizeCover(post.frontmatter.cover) }))
-  .sort((a, b) => String(b.frontmatter.pubDate).localeCompare(String(a.frontmatter.pubDate)));
+  .sort((a, b) => comparePublicationDates(b.frontmatter.pubDate, a.frontmatter.pubDate) || (a.url || a.file).localeCompare(b.url || b.file));
 
 export type Post = (typeof posts)[number];
-
-export function dateParts(value: string | Date) {
-  const text = value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
-  return { full: text, year: text.slice(0, 4), day: text.slice(5).replace('-', '.') };
-}

@@ -1,9 +1,9 @@
 import { defineCollection, z } from 'astro:content';
 import { guestbookLoader } from './lib/guestbook-loader';
-import { validDate } from './lib/guestbook-rules.mjs';
+import { validPublicationDate } from './lib/publication-date.mjs';
 import { normalizePlacements, normalizeCollections } from './lib/editorial.mjs';
 
-const date = z.string().refine(validDate, '请填写真实日期并加引号，例如 "2026-11-01"');
+const date = z.string().refine(validPublicationDate, '请填写真实日期和时间并加引号，例如 "2026-11-02T20:30+08:00"；也兼容只有日期的旧内容');
 const id = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, '请使用留言文件名，不含 .md');
 
 const guestbook = defineCollection({

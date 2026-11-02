@@ -1,12 +1,14 @@
+import { comparePublicationDates, dateParts } from './publication-date.mjs';
+
 export function groupMonths(entries) {
   const groups = new Map();
   for (const entry of entries) {
-    const month = entry.date.slice(0, 7);
+    const month = dateParts(entry.date).date.slice(0, 7);
     const items = groups.get(month) || [];
     items.push(entry);
     groups.set(month, items);
   }
-  return [...groups].sort(([a], [b]) => b.localeCompare(a)).map(([month, items]) => ({ month, items: items.sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id)) }));
+  return [...groups].sort(([a], [b]) => b.localeCompare(a)).map(([month, items]) => ({ month, items: items.sort((a, b) => comparePublicationDates(b.date, a.date) || a.id.localeCompare(b.id)) }));
 }
 export function initBrowseLists(document) {
   for (const root of document.querySelectorAll('[data-browse-list]')) {
@@ -42,8 +44,8 @@ export function initBrowseLists(document) {
         }
         updateGroups();
       } else {
-        const ordered = [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-        if (select.value === 'newest') ordered.reverse();
+        const direction = select.value === 'newest' ? -1 : 1;
+        const ordered = [...entries].sort((a, b) => direction * comparePublicationDates(a.date, b.date) || a.id.localeCompare(b.id));
         list.append(...ordered.map((entry) => entry.node));
       }
     }

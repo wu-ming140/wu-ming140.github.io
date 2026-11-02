@@ -1,12 +1,13 @@
 ---
 import { localPath } from '../site';
 import { messageStatus, messageSource, type GuestbookMessage } from '../lib/guestbook';
+import { dateParts } from '../lib/publication-date.mjs';
 interface Props { message: GuestbookMessage }
 const { message } = Astro.props;
 ---
 <article class="message-card" data-entry-date={message.data.date} data-entry-id={message.id} data-kind={message.data.kind} data-channel={message.data.channel} data-answered={String(message.replies.length > 0)}>
   <div class="message-meta">
-    <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+    <span>{message.data.author}</span><time datetime={message.data.date}>{dateParts(message.data.date).label}</time>
     <span class:list={['message-status', { answered: message.replies.length > 0 }]}>{messageStatus(message)}</span>
   </div>
   <h2><a href={localPath(`guestbook/${message.id}/`)}>{message.data.title}<span aria-hidden="true">↗</span></a></h2>

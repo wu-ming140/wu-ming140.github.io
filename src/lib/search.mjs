@@ -1,3 +1,5 @@
+import { comparePublicationDates, dateParts } from './publication-date.mjs';
+
 export function normalizeQuery(value) {
   return String(value).normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -14,7 +16,7 @@ export function searchEntries(entries, query, type = '') {
     if (!terms.every((term) => all.includes(term))) return null;
     const score = terms.reduce((sum, term) => sum + (title.includes(term) ? 8 : 0) + (labels.includes(term) ? 5 : 0) + (description.includes(term) ? 3 : 0) + (body.includes(term) ? 1 : 0), 0);
     return { ...entry, score };
-  }).filter(Boolean).sort((a, b) => b.score - a.score || b.date.localeCompare(a.date));
+  }).filter(Boolean).sort((a, b) => b.score - a.score || comparePublicationDates(b.date, a.date));
 }
 
 export function excerptFor(entry, query, length = 150) {
@@ -80,7 +82,7 @@ export function initSearch(document, fetchImpl = globalThis.fetch) {
         const item = document.createElement('li');
         const meta = document.createElement('p');
         meta.className = 'search-result-meta';
-        meta.textContent = `${entry.type} · ${entry.category} · ${entry.date}`;
+        meta.textContent = `${entry.type} · ${entry.category} · ${dateParts(entry.date).label}`;
         const heading = document.createElement('h2');
         const link = document.createElement('a');
         link.href = entry.url;

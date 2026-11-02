@@ -1,5 +1,6 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
+import { dateParts } from './publication-date.mjs';
 
 const parser = unified().use(remarkParse);
 export function markdownText(markdown = '') {
@@ -17,7 +18,7 @@ export function createSearchIndex(posts, messages = []) {
   const entries = posts.filter((post) => !post.frontmatter.draft).map((post) => ({
     title: post.frontmatter.title, url: post.url, description: post.frontmatter.description || '',
     type: post.column.slug === 'portfolio' ? '作品' : '文章', category: post.column.title,
-    date: post.frontmatter.pubDate instanceof Date ? post.frontmatter.pubDate.toISOString().slice(0, 10) : String(post.frontmatter.pubDate).slice(0, 10), tags: post.tags,
+    date: dateParts(post.frontmatter.pubDate).full, tags: post.tags,
     body: markdownText(post.rawContent()),
   }));
   for (const message of messages.filter((item) => !item.data.draft)) {

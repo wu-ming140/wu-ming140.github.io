@@ -7,6 +7,7 @@ import { createDraftStorage, createDraftSession, restoreDraft } from '../lib/stu
 import { normalizeCover, normalizeTags } from '../lib/post-meta.mjs';
 import { createEditorialControls, renderFindings } from '../lib/editorial-controls.mjs';
 import { inspectPublication } from '../lib/publication-checks.mjs';
+import { dateParts, replyPredatesMessage } from '../lib/publication-date.mjs';
 
 const root = document.getElementById('studio');
 const byId = (name) => document.getElementById(`studio-${name}`);
@@ -75,8 +76,7 @@ async function clearLocalDraft(message) {
 }
 
 function today() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return dateParts(new Date()).date;
 }
 
 function randomId() {
@@ -119,8 +119,10 @@ function resetDocument() {
   originalMetadata = {};
   editorial.set();
   byId('check-panel').hidden = true;
-  byId('name').value = `${today()}-${randomId()}`;
-  byId('date').value = today();
+  const published = dateParts(new Date());
+  byId('name').value = `${published.date}-${randomId()}`;
+  byId('date').value = published.date;
+  byId('time').value = published.time;
   byId('author').value = root.dataset.author;
   byId('source').value = '博主自留';
   body.value = '';
@@ -142,7 +144,7 @@ async function newDocument() {
 function fields() {
   return {
     type: byId('type').value, name: byId('name').value, title: byId('title').value,
-    date: byId('date').value, category: byId('category').value,
+    date: byId('date').value, time: byId('time').value, category: byId('category').value,
     description: byId('description').value, author: byId('author').value,
     source: byId('source').value, message: byId('message').value,
     tags: byId('tags').value, cover: byId('cover').value, coverAlt: byId('coverAlt').value,
@@ -314,7 +316,9 @@ byId('load').addEventListener('click', async () => {
     byId('type').value = kind === 'message' ? (metadata.kind || 'message') : kind;
     byId('name').value = path.split('/').pop().slice(0, -3);
     byId('title').value = metadata.title || '';
-    byId('date').value = String(metadata.pubDate || metadata.date || today()).slice(0, 10);
+    const published = dateParts(metadata.pubDate || metadata.date || today());
+    byId('date').value = published.date;
+    byId('time').value = published.time;
     if (kind === 'article') byId('category').value = category;
     byId('description').value = metadata.description || '';
     byId('tags').value = normalizeTags(metadata.tags).join('，');
@@ -339,13 +343,13 @@ async function prepareDocument() {
 }
 
 async function checkDocument(content) {
-  const findings = inspectPublication(content, { assets, entries: snapshot?.entries, catalog: checkCatalog, today: today() });
+  const findings = inspectPublication(content, { assets, entries: snapshot?.entries, catalog: checkCatalog, today: today(), now: new Date() });
   if (content.metadata.message && snapshot) {
     const sha = snapshot.entries.get(`src/content/guestbook/${content.metadata.message}.md`);
     if (!sha) findings.push({ level: 'error', message: '仓库里还没有对应留言，请先发布留言，再发布回复。' });
     else {
       const parent = parseDocument(base64ToText(await publisher.read(sha)));
-      if (content.metadata.date < parent.metadata.date) findings.push({ level: 'error', message: '回复日期不能早于对应留言的日期。' });
+      if (replyPredatesMessage(content.metadata.date, parent.metadata.date)) findings.push({ level: 'error', message: '回复时间不能早于对应留言的时间。' });
     }
   }
   const displayed = findings.length > 1 ? findings.filter((finding) => finding.level !== 'success') : findings;

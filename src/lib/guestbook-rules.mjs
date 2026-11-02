@@ -1,9 +1,5 @@
-// 留言采用纯 Markdown；文章原有的 Markdown 设置不受影响。
-export function validDate(value) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value)
-    && Number.isFinite(Date.parse(`${value}T00:00:00Z`))
-    && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
-}
+import { replyPredatesMessage } from './publication-date.mjs';
+export { validDate } from './publication-date.mjs';
 
 export function safeMarkdownUrl(value) {
   if (/[\u0000-\u0020\u007f\\]/.test(value)) return false;
@@ -28,7 +24,7 @@ export function validateEntries(messages, replies) {
       throw new Error(`回复 ${reply.id} 对应的留言不存在：${reply.data.message}`);
     }
     const message = messages.find((entry) => entry.id === reply.data.message);
-    if (reply.data.date < message.data.date) {
+    if (replyPredatesMessage(reply.data.date, message.data.date)) {
       throw new Error(`回复日期不能早于留言日期：${reply.id}`);
     }
   }

@@ -1,10 +1,11 @@
 ---
 import type { CatalogEntry } from '../lib/catalog';
+import { dateParts } from '../lib/publication-date.mjs';
 interface Props { entry: CatalogEntry }
 const { entry } = Astro.props;
 ---
 <article class="content-link">
-  <p>{entry.label} · <time datetime={entry.date}>{entry.date}</time></p>
+  <p>{entry.label} · <time datetime={entry.date}>{dateParts(entry.date).label}</time></p>
   <h3><a href={entry.url}>{entry.title} <span aria-hidden="true">↗</span></a></h3>
   {entry.description && <p class="content-link-description">{entry.description}</p>}
 </article>

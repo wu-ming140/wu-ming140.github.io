@@ -1,13 +1,13 @@
 ---
 layout: ../../layouts/PostLayout.astro
-title: "你好，小暝宝基地"
+title: "你好，暝王星"
 description: "这是无暝的第一篇随笔！加油喵！"
 pubDate: "2026-10-30"
 category: "生活随笔/心得分享"
 sample: true
 ---
 
-欢迎来到 **无暝-小暝宝基地**。
+欢迎来到 **无暝-暝王星**。
 
 这里是一个小小的地方，用来放一些文字、一些日常，以及那些暂时不想忘记的瞬间。
 

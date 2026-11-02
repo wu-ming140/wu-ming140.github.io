@@ -6,6 +6,7 @@ import { getPostColumn, columnPath } from '../lib/columns';
 import type { MarkdownLayoutProps } from 'astro';
 import type { PostData } from '../lib/posts';
 import { normalizeTags, normalizeCover } from '../lib/post-meta.mjs';
+import { dateParts } from '../lib/publication-date.mjs';
 import TagList from '../components/TagList.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import ContentNavigation from '../components/ContentNavigation.astro';
@@ -20,9 +21,7 @@ const cover = normalizeCover(frontmatter.cover);
 const hasToc = headings.some((heading) => heading.depth === 2 || heading.depth === 3);
 const catalog = await getCatalog();
 const current = catalog.find((entry) => entry.url === frontmatter.url);
-const date = frontmatter.pubDate instanceof Date
-  ? frontmatter.pubDate.toISOString().slice(0, 10)
-  : String(frontmatter.pubDate).slice(0, 10);
+const date = dateParts(frontmatter.pubDate);
 ---
 <SiteLayout title={title} description={description} active="home">
   <article class:list={['article-container', 'post-page', { 'post-has-toc': hasToc }]}>
@@ -30,7 +29,7 @@ const date = frontmatter.pubDate instanceof Date
     <header class="article-header">
       <h1>{title}</h1>
       <div class="article-metadata">
-        <time datetime={date}>{date}</time>
+        <time datetime={date.full}>{date.label}</time>
         <a href={localPath(columnPath(column))}>{column.title} ↗</a>
         <ViewCount scope="page" />
       </div>

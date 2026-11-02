@@ -3,7 +3,8 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
-import remarkGuestbook, { validDate, safeMarkdownUrl } from './guestbook-rules.mjs';
+import remarkGuestbook, { safeMarkdownUrl } from './guestbook-rules.mjs';
+import { publicationValue } from './publication-date.mjs';
 import remarkMedia from './media.mjs';
 import remarkLineBreaks from './line-breaks.mjs';
 import { normalizeTags, normalizeCover } from './post-meta.mjs';
@@ -31,7 +32,7 @@ export function buildDocument(fields, originalMetadata = {}) {
   if (!['article', 'message', 'question', 'reply'].includes(type)) throw new Error('请选择发布内容的类型。');
   const name = fields.name.trim();
   if (!fields.editPath && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) throw new Error('文件名请使用小写英文字母、数字和连字符，例如 my-first-project。');
-  if (!validDate(fields.date)) throw new Error('请填写有效的发布日期。');
+  const published = publicationValue(fields.date, fields.time);
   const body = fields.body.trim();
   if (!body) throw new Error('先写一点正文，再保存或发布。');
   const metadata = { ...originalMetadata };
@@ -45,7 +46,7 @@ export function buildDocument(fields, originalMetadata = {}) {
     directory = 'src/pages/posts';
     metadata.layout = '../../layouts/PostLayout.astro';
     metadata.description = fields.description.trim();
-    metadata.pubDate = fields.date;
+    metadata.pubDate = published;
     metadata.category = fields.category;
     const tags = normalizeTags(fields.tags ?? metadata.tags);
     if (tags.length) metadata.tags = tags;
@@ -59,7 +60,7 @@ export function buildDocument(fields, originalMetadata = {}) {
     directory = 'src/content/replies';
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fields.message.trim())) throw new Error('请填写要回复的留言文件名，不含 .md。');
     metadata.message = fields.message.trim();
-    metadata.date = fields.date;
+    metadata.date = published;
   } else {
     directory = 'src/content/guestbook';
     if (['index', 'contribute', 'elsewhere'].includes(name)) throw new Error('这个文件名已被留言页面使用，请换一个。');
@@ -68,7 +69,7 @@ export function buildDocument(fields, originalMetadata = {}) {
     const source = fields.source.trim();
     if (source.length > 40) throw new Error('来源最多填写 40 个字。');
     metadata.author = author;
-    metadata.date = fields.date;
+    metadata.date = published;
     metadata.kind = type;
     metadata.channel = originalMetadata.channel || 'other';
     if (source) metadata.source = source;

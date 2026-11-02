@@ -100,6 +100,22 @@ test('archive is selectable, reversible and filter-aware, without duplicating co
   dom.window.close();
 });
 
+test('same-day posts retain a consistent order across newest, oldest and monthly views', () => {
+  const dom = new JSDOM('<div data-browse-list><div data-browse-controls><select><option value="newest">新</option><option value="oldest">旧</option><option value="months">归档</option></select></div><div data-browse-items><article data-entry-date="2026-10-30" data-entry-id="/posts/wuming&first/">你好，暝王星</article><article data-entry-date="2026-11-02" data-entry-id="/posts/new/">新文章</article><article data-entry-date="2026-10-30" data-entry-id="/posts/2026年10月30日学习心得/">学习心得</article></div></div>', { url: 'https://blog.example/' });
+  const document = dom.window.document;
+  initBrowseLists(document);
+  const select = document.querySelector('select');
+  const titles = () => [...document.querySelectorAll('[data-entry-date]')].map((node) => node.textContent);
+  assert.deepEqual(titles(), ['新文章', '学习心得', '你好，暝王星']);
+  for (const mode of ['months', 'oldest', 'newest']) {
+    select.value = mode;
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.deepEqual(titles().filter((title) => title !== '新文章'), ['学习心得', '你好，暝王星'], mode);
+    assert.equal(titles()[mode === 'oldest' ? 2 : 0], '新文章', mode);
+  }
+  dom.window.close();
+});
+
 test('publication checks distinguish suggestions from missing files and do not reject new attachments', () => {
   const content = buildDocument({ ...fields, category: '作品集', description: '', body: '![](/media/missing.png)\n\n[引用][undefined]' });
   const findings = inspectPublication(content, { entries: new Map(), today: '2026-11-01' });

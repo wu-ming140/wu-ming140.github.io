@@ -3,9 +3,10 @@ import remarkParse from 'remark-parse';
 import { safeMarkdownUrl } from './guestbook-rules.mjs';
 import { collectionSlug } from './editorial.mjs';
 import { resolveColumn } from './column-data.mjs';
+import { dateParts, comparePublicationDates } from './publication-date.mjs';
 
 const parser = unified().use(remarkParse);
-export function inspectPublication(document, { assets = [], entries, catalog = [], today = new Date().toISOString().slice(0, 10) } = {}) {
+export function inspectPublication(document, { assets = [], entries, catalog = [], today = dateParts(new Date()).date, now } = {}) {
   const findings = [];
   const add = (level, message) => findings.push({ level, message });
   const metadata = document.metadata;
@@ -13,7 +14,8 @@ export function inspectPublication(document, { assets = [], entries, catalog = [
   if (article && !metadata.description) add('warning', '还没有填写一句话简介，列表中会少一段介绍。');
   if (article && resolveColumn(metadata.category).slug === 'portfolio' && !metadata.cover) add('warning', '作品还没有设置封面，卡片会使用文字封面。');
   if (metadata.cover && !metadata.coverAlt) add('warning', '封面还没有填写图片说明。');
-  if ((metadata.pubDate || metadata.date) > today) add('warning', '发布日期在未来，确认这就是你想使用的日期。');
+  const published = metadata.pubDate || metadata.date;
+  if (now ? comparePublicationDates(published, now) > 0 : dateParts(published).date > today) add('warning', '发布时间在未来，确认这就是你想使用的时间。');
   if (metadata.draft) add('info', '这份内容设为草稿，不会进入公开列表、搜索、合集或 RSS。');
   const references = new Map();
   const definitions = new Map();

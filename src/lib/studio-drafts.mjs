@@ -1,7 +1,7 @@
 import { MAX_MEDIA_BYTES, MAX_TOTAL_MEDIA_BYTES, mediaType } from './media.mjs';
 import { normalizePlacements } from './editorial.mjs';
 
-const fieldNames = ['type', 'name', 'title', 'date', 'category', 'description', 'author', 'source', 'message', 'body', 'editPath', 'tags', 'cover', 'coverAlt'];
+const fieldNames = ['type', 'name', 'title', 'date', 'time', 'category', 'description', 'author', 'source', 'message', 'body', 'editPath', 'tags', 'cover', 'coverAlt'];
 const conflictMessage = '另一页写作台已更新本地草稿，本页已停止自动保存。请先下载本页的完整草稿，再刷新或关闭其他写作台。';
 
 // 只保存编辑内容；连接凭证、GitHub 客户端及临时预览地址不进入存储。

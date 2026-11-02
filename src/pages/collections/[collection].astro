@@ -3,6 +3,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getCatalog } from '../../lib/catalog';
 import { collectionGroups } from '../../lib/editorial.mjs';
 import { localPath } from '../../site';
+import { dateParts } from '../../lib/publication-date.mjs';
 export async function getStaticPaths() {
   return collectionGroups(await getCatalog()).map((group) => ({ params: { collection: group.slug }, props: { group } }));
 }
@@ -10,7 +11,7 @@ const { group } = Astro.props;
 ---
 <SiteLayout title={`合集：${group.name}`} active="collections">
   <header class="page-header container"><a class="back-link" href={localPath('collections/')}>← 全部合集</a><h1>{group.name}</h1><p>共 {group.items.length} 份内容，按博主整理的顺序阅读。</p><div class="journal-more"><a class="quiet-link" href={group.items[0].url}>从第一项开始 <span aria-hidden="true">→</span></a></div></header>
-  <section class="archive container" aria-label="合集内容"><ol class="collection-items">{group.items.map((entry) => <li><span class="collection-order">{entry.order}</span><div><p>{entry.label} · {entry.date}</p><h2><a href={entry.url}>{entry.title} ↗</a></h2>{entry.description && <p>{entry.description}</p>}</div></li>)}</ol></section>
+  <section class="archive container" aria-label="合集内容"><ol class="collection-items">{group.items.map((entry) => <li><span class="collection-order">{entry.order}</span><div><p>{entry.label} · <time datetime={entry.date}>{dateParts(entry.date).label}</time></p><h2><a href={entry.url}>{entry.title} ↗</a></h2>{entry.description && <p>{entry.description}</p>}</div></li>)}</ol></section>
 </SiteLayout>
 <style>
   .collection-items { padding: 0; margin: 0; list-style: none; }

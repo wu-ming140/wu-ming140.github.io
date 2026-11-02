@@ -1,5 +1,6 @@
 import { getCollection } from 'astro:content';
 import { validateEntries } from './guestbook-rules.mjs';
+import { comparePublicationDates } from './publication-date.mjs';
 
 export async function getGuestbook() {
   const [messages, replies] = await Promise.all([
@@ -8,12 +9,12 @@ export async function getGuestbook() {
   validateEntries(messages, replies);
   return messages
     .filter((message) => !message.data.draft)
-    .sort((a, b) => b.data.date.localeCompare(a.data.date) || a.id.localeCompare(b.id))
+    .sort((a, b) => comparePublicationDates(b.data.date, a.data.date) || a.id.localeCompare(b.id))
     .map((message) => ({
       ...message,
       replies: replies
         .filter((reply) => reply.data.message === message.id && !reply.data.draft)
-        .sort((a, b) => a.data.date.localeCompare(b.data.date) || a.id.localeCompare(b.id)),
+        .sort((a, b) => comparePublicationDates(a.data.date, b.data.date) || a.id.localeCompare(b.id)),
     }));
 }
 

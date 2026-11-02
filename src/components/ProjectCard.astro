@@ -12,7 +12,7 @@ const date = dateParts(post.frontmatter.pubDate);
     {post.cover && <img src={post.cover} alt={post.frontmatter.coverAlt || post.frontmatter.title} loading="lazy" decoding="async" width="800" height="500" data-project-cover />}
   </a>
   <div class="project-info">
-    <time datetime={date.full}>{date.full}</time>
+    <time datetime={date.full}>{date.label}</time>
     <h2><a href={post.url}>{post.frontmatter.title} <span aria-hidden="true">↗</span></a></h2>
     {post.frontmatter.description && <p>{post.frontmatter.description}</p>}
     <TagList tags={post.tags} />

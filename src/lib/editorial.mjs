@@ -1,4 +1,5 @@
 import { tagSlug } from './post-meta.mjs';
+import { comparePublicationDates, dateParts } from './publication-date.mjs';
 
 export const boardLabels = {
   hall: '大厅', life: '生活随笔 / 心得分享', learning: '学习记录 / 学习心得', portfolio: '作品集', interests: '爱好', 'site-log': '小站日志',
@@ -42,8 +43,8 @@ export function normalizeCollections(value = []) {
 }
 
 export function collectionSlug(name) { return tagSlug(name); }
-export function contentDate(value) { return value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10); }
-export function chronological(entries) { return [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)); }
+export function contentDate(value) { return dateParts(value).full; }
+export function chronological(entries) { return [...entries].sort((a, b) => comparePublicationDates(a.date, b.date) || a.id.localeCompare(b.id)); }
 export function boardEntries(entries, board) {
   return entries.filter((entry) => {
     if (board === 'hall') return entry.type === 'article';
@@ -66,7 +67,7 @@ export function collectionGroups(entries) {
     group.items.push({ ...entry, order: membership.order });
     groups.set(slug, group);
   }
-  return [...groups.values()].map((group) => ({ ...group, items: group.items.sort((a, b) => a.order - b.order || a.date.localeCompare(b.date) || a.id.localeCompare(b.id)) }))
+  return [...groups.values()].map((group) => ({ ...group, items: group.items.sort((a, b) => a.order - b.order || comparePublicationDates(a.date, b.date) || a.id.localeCompare(b.id)) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
 }
 export function neighbors(entries, current) {
@@ -81,5 +82,5 @@ export function relatedEntries(current, entries, limit = 3) {
     (entry.collections || []).filter((item) => groups.has(collectionSlug(item.name))).length * 8
     + (entry.tags || []).filter((tag) => tags.has(tag.toLowerCase())).length * 3
     + (current.type === 'article' ? Number(entry.type === 'article' && entry.column === current.column) : Number(entry.type === current.type)),
-  })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || b.entry.date.localeCompare(a.entry.date) || a.entry.id.localeCompare(b.entry.id)).slice(0, limit).map((item) => item.entry);
+  })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || comparePublicationDates(b.entry.date, a.entry.date) || a.entry.id.localeCompare(b.entry.id)).slice(0, limit).map((item) => item.entry);
 }

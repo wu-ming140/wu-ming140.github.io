@@ -6,6 +6,7 @@ import { getGuestbook, messageStatus, messageSource } from '../../lib/guestbook'
 import '../../styles/guestbook.css';
 import { getCatalog } from '../../lib/catalog';
 import ContentNavigation from '../../components/ContentNavigation.astro';
+import { dateParts } from '../../lib/publication-date.mjs';
 
 export async function getStaticPaths() {
   return (await getGuestbook()).map((message) => ({ params: { id: message.id }, props: { message } }));
@@ -25,7 +26,7 @@ const replies = await Promise.all(message.replies.map(async (reply) => ({
       <p class="about-label">{message.data.kind === 'question' ? '一个提问' : '一封来信'} · {messageStatus(message)}</p>
       <h1>{message.data.title}</h1>
       <div class="article-metadata">
-        <span>{message.data.author}</span><time datetime={message.data.date}>{message.data.date}</time>
+        <span>{message.data.author}</span><time datetime={message.data.date}>{dateParts(message.data.date).label}</time>
         <span>来源：{messageSource(message)}</span>
         {message.data.github && <a href={`https://github.com/${message.data.github}`} target="_blank" rel="noopener noreferrer">@{message.data.github} ↗</a>}
       </div>
@@ -35,7 +36,7 @@ const replies = await Promise.all(message.replies.map(async (reply) => ({
     <section class="reply-section" aria-labelledby="replies-title">
       <div class="section-head"><h2 id="replies-title" class="section-title">博主回复</h2><span class="section-caption">{replies.length} 条回声</span></div>
       {replies.length === 0 && <p class="reply-waiting">{message.data.kind === 'question' ? '问题已经收到了，等我想一想，再来回答。' : '谢谢你留下这句话。回复会出现在这里。'}</p>}
-      {replies.map((reply) => <article class="owner-reply"><div class="message-meta"><span class="owner-name">{site.shortName}<span class="owner-badge">博主</span></span><time datetime={reply.data.date}>{reply.data.date}</time></div><div class="prose guestbook-prose"><reply.Content /></div></article>)}
+      {replies.map((reply) => <article class="owner-reply"><div class="message-meta"><span class="owner-name">{site.shortName}<span class="owner-badge">博主</span></span><time datetime={reply.data.date}>{dateParts(reply.data.date).label}</time></div><div class="prose guestbook-prose"><reply.Content /></div></article>)}
     </section>
     {current && <ContentNavigation current={current} entries={catalog} />}
     <div class="article-end"><span>谢谢你的声音。</span><a class="quiet-link" href={localPath('guestbook/contribute/')}>我也想说几句 <span class="arrow" aria-hidden="true">→</span></a></div>
