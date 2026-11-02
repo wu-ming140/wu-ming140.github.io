@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
 import { initHomeMotion } from '../src/lib/home-motion.mjs';
 
-function page({ reduced = false, fine = true, stored, observer = true } = {}) {
+function page({ reduced = false, fine = true, stored, observer = true, site = false } = {}) {
   const dom = new JSDOM('<main data-home-motion><div class="hero-grid"><div class="scene-system"></div></div><button data-motion-toggle hidden><span data-motion-label></span></button><a class="column-card" href="/posts/columns/life/">生活</a><article class="post-row"><a href="/posts/hello/">文章</a></article></main>', { url: 'https://blog.example/' });
   const { window } = dom;
   const document = window.document;
+  document.querySelector('button').insertAdjacentHTML('beforebegin', '<span data-motion-status role="status"></span>');
+  if (site) {
+    document.querySelector('main').removeAttribute('data-home-motion');
+    document.body.dataset.siteMotion = '';
+  }
   const media = new Map();
   window.matchMedia = (query) => {
     const item = new window.EventTarget();
@@ -26,7 +32,7 @@ function page({ reduced = false, fine = true, stored, observer = true } = {}) {
   window.requestAnimationFrame = (callback) => { const id = next++; pendingFrames.set(id, callback); return id; };
   window.cancelAnimationFrame = (id) => pendingFrames.delete(id);
   if (stored) window.localStorage.setItem('wuming-home-motion', stored);
-  const root = document.querySelector('main');
+  const root = site ? document.body : document.querySelector('main');
   const card = document.querySelector('.column-card');
   const article = document.querySelector('.post-row');
   card.getBoundingClientRect = () => ({ top: 20, left: 0, width: 200, height: 200 });
@@ -51,6 +57,8 @@ test('home motion can be paused and remembered, keeps all content readable, and 
   assert.equal(p.root.dataset.motion, 'paused');
   assert.equal(p.button.getAttribute('aria-pressed'), 'false');
   assert.equal(p.label.textContent, '开启动效');
+  assert.equal(p.button.getAttribute('aria-label'), '开启页面动态效果');
+  assert.equal(p.document.querySelector('[data-motion-status]').textContent, '动效已暂停');
   assert.equal(p.article.hasAttribute('data-reveal-pending'), false);
   assert.equal(p.window.localStorage.getItem('wuming-home-motion'), 'paused');
   const next = page({ stored: p.window.localStorage.getItem('wuming-home-motion') });
@@ -70,6 +78,7 @@ test('system motion preferences take effect immediately without changing the sav
   assert.equal(p.root.dataset.motion, 'paused');
   assert.equal(p.button.disabled, true);
   assert.equal(p.label.textContent, '已减少动态');
+  assert.equal(p.document.querySelector('[data-motion-status]').textContent, '跟随系统 · 减少动态');
   assert.equal(p.article.hasAttribute('data-reveal-pending'), false);
   assert.equal(p.window.localStorage.getItem('wuming-home-motion'), null);
   const preference = p.media.get('(prefers-reduced-motion: reduce)');
@@ -125,4 +134,53 @@ test('pointer effects are limited to one update per frame and reset when scrolli
   initHomeMotion(touch.document); touch.move(100, 100);
   assert.equal(touch.pendingFrames.size, 0);
   touch.dom.window.close();
+});
+
+test('the shared layout enables motion without the homepage and exposes the current state', () => {
+  const p = page({ site: true });
+  const controller = initHomeMotion(p.document);
+  assert.equal(p.document.querySelector('[data-home-motion]'), null);
+  assert.equal(p.root.dataset.motion, 'running');
+  assert.equal(p.root.dataset.motionActive, 'true');
+  assert.equal(p.document.querySelector('[data-motion-status]').textContent, '动效运行中');
+  assert.equal(p.button.getAttribute('aria-label'), '暂停页面动态效果');
+  p.button.click();
+  assert.equal(p.root.dataset.motionActive, 'false');
+  p.button.click();
+  assert.equal(p.root.dataset.motionActive, 'true');
+  controller.destroy();
+  p.dom.window.close();
+});
+
+test('resuming motion never hides cards already revealed by scrolling or by pausing', () => {
+  const p = page({ site: true });
+  initHomeMotion(p.document);
+  assert.equal(p.article.hasAttribute('data-reveal-pending'), true);
+  p.observers[0].callback([{ target: p.article, isIntersecting: true }]);
+  p.button.click();
+  p.button.click();
+  assert.equal(p.article.hasAttribute('data-reveal-pending'), false);
+  assert.equal(p.observers.at(-1).nodes.has(p.article), false);
+  p.dom.window.close();
+});
+
+test('a saved pause keeps titles readable while continuous animations retain their position', () => {
+  const p = page({ site: true, stored: 'paused' });
+  p.root.className = 'site-motion';
+  const style = p.document.createElement('style');
+  style.textContent = readFileSync(new URL('../src/styles/home-motion.css', import.meta.url), 'utf8');
+  p.document.head.append(style);
+  p.root.insertAdjacentHTML('beforeend', '<div class="ambient-light-one"></div><h1 class="hero-letter">标题</h1>');
+  initHomeMotion(p.document);
+  const title = p.document.querySelector('.hero-letter');
+  const ambient = p.document.querySelector('.ambient-light-one');
+  const pausedAnimation = p.window.getComputedStyle(ambient).animation;
+  assert.equal(p.window.getComputedStyle(title).animation, '');
+  assert.equal(p.window.getComputedStyle(ambient).animationPlayState, 'paused');
+  p.button.click();
+  assert.match(p.window.getComputedStyle(title).animation, /home-letter-in/);
+  assert.equal(p.window.getComputedStyle(ambient).animation, pausedAnimation);
+  p.button.click();
+  assert.equal(p.window.getComputedStyle(title).animation, '');
+  p.dom.window.close();
 });

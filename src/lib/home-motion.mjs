@@ -1,15 +1,16 @@
 const instances = new WeakMap();
 const storageKey = 'wuming-home-motion';
-const revealSelector = '.section-head, .column-card, .project-card, .content-link, .post-row, .home-quote';
-const cardSelector = '.column-card, .project-card, .content-link, .post-row';
+const revealSelector = '.section-head, .column-card, .project-card, .content-link, .post-row, .message-card, .owner-reply, .home-quote';
+const cardSelector = '.column-card, .project-card, .content-link, .post-row, .message-card';
 
 export function initHomeMotion(document) {
-  const root = document.querySelector('[data-home-motion]');
+  const root = document.querySelector('[data-site-motion], [data-home-motion]');
   if (!root) return;
   if (instances.has(root)) return instances.get(root);
   const window = document.defaultView;
   const button = root.querySelector('[data-motion-toggle]');
   const label = root.querySelector('[data-motion-label]');
+  const status = root.querySelector('[data-motion-status]');
   const scene = root.querySelector('.scene-system');
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
   const pointer = window.matchMedia?.('(hover: hover) and (pointer: fine)');
@@ -22,11 +23,12 @@ export function initHomeMotion(document) {
   let destroyed = false;
   try { paused = window.localStorage.getItem(storageKey) === 'paused'; } catch { /* 页面仍可在不允许存储时使用。 */ }
   const targets = [...root.querySelectorAll(revealSelector)];
+  const revealed = new WeakSet();
   function listen(target, event, callback, options) {
     target.addEventListener(event, callback, options);
     listeners.push(() => target.removeEventListener(event, callback, options));
   }
-  function reveal(node) { node.removeAttribute('data-reveal-pending'); }
+  function reveal(node) { node.removeAttribute('data-reveal-pending'); revealed.add(node); }
   function clearCard() {
     if (!currentCard) return;
     currentCard.removeAttribute('data-pointer-card');
@@ -52,8 +54,10 @@ export function initHomeMotion(document) {
     button.hidden = false;
     button.disabled = Boolean(reduced?.matches);
     button.setAttribute('aria-pressed', String(enabled));
-    button.title = reduced?.matches ? '跟随系统的减少动态设置' : '只调整页面动效，选择会保存在当前浏览器';
+    button.setAttribute('aria-label', reduced?.matches ? '已跟随系统减少动态' : paused ? '开启页面动态效果' : '暂停页面动态效果');
+    button.title = reduced?.matches ? '系统开启了减少动态，当前显示静态效果' : '控制全站动效，选择会保存在当前浏览器';
     label.textContent = reduced?.matches ? '已减少动态' : paused ? '开启动效' : '暂停动效';
+    if (status) status.textContent = reduced?.matches ? '跟随系统 · 减少动态' : paused ? '动效已暂停' : '动效运行中';
     if (!enabled || !window.IntersectionObserver) { targets.forEach(reveal); return; }
     try {
       observer = new window.IntersectionObserver((entries) => {
@@ -61,7 +65,7 @@ export function initHomeMotion(document) {
       }, { threshold: 0, rootMargin: '0px 0px -28px 0px' });
       targets.forEach((node, index) => {
         node.dataset.homeReveal = '';
-        if (node.getBoundingClientRect().top < window.innerHeight - 28) { reveal(node); return; }
+        if (revealed.has(node) || node.getBoundingClientRect().top < window.innerHeight - 28) { reveal(node); return; }
         node.dataset.revealPending = '';
         node.style.setProperty('--reveal-delay', `${(index % 3) * 55}ms`);
         observer.observe(node);

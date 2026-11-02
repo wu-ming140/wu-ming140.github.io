@@ -2,6 +2,7 @@
 import { site, localPath } from '../site';
 import ViewCount from '../components/ViewCount.astro';
 import ImageViewer from '../components/ImageViewer.astro';
+import '../styles/home-motion.css';
 
 interface Props {
   title?: string;
@@ -41,9 +42,20 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     <link rel="icon" href={localPath('ming-favicon.svg')} type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title={`${site.name} · 全站动态`} href={new URL(localPath('rss.xml'), Astro.site).href} />
   </head>
-  <body>
+  <body class="site-motion" data-site-motion>
     <a class="skip-link" href="#main">跳到正文</a>
-    <div class="atmosphere" aria-hidden="true"></div>
+    <div class="home-ambient" aria-hidden="true">
+      <div class="ambient-grid"></div>
+      <div class="ambient-light ambient-light-one"></div>
+      <div class="ambient-light ambient-light-two"></div>
+      <div class="ambient-light ambient-light-three"></div>
+      <div class="ambient-stars"></div>
+    </div>
+    <div class="motion-controls" aria-label="页面动效">
+      <span class="motion-status" data-motion-status role="status">正在准备动效</span>
+      <button class="home-motion-toggle" type="button" data-motion-toggle aria-label="正在准备页面动效" aria-pressed="false" disabled><span class="motion-toggle-icon" aria-hidden="true"></span><span data-motion-label>正在准备</span></button>
+      <noscript><span>启用 JavaScript 后可开启动效</span></noscript>
+    </div>
     <header class="site-header">
       <a class="brand" href={localPath()} aria-label={`${site.name}首页`}>
         <span class="brand-mark" aria-hidden="true">暝</span>
@@ -74,7 +86,9 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     <ImageViewer />
     <script>
       import { initViewCounts } from '../lib/view-counts.mjs';
+      import { initHomeMotion } from '../lib/home-motion.mjs';
       initViewCounts();
+      initHomeMotion(document);
     </script>
   </body>
 </html>
