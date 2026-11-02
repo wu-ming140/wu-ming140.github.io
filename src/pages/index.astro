@@ -11,23 +11,56 @@ import BrowseList from '../components/BrowseList.astro';
 import CuratedSection from '../components/CuratedSection.astro';
 import { getCatalog } from '../lib/catalog';
 import '../styles/hall.css';
+import '../styles/home-motion.css';
 const projects = posts.filter((post) => post.column.slug === 'portfolio');
 const catalog = await getCatalog();
 ---
 <!-- 下面是网页结构。SiteLayout 统一提供导航、页脚和样式。 -->
 <SiteLayout title="大厅" active="home">
+  <div class="dynamic-home" data-home-motion>
+    <div class="home-ambient" aria-hidden="true">
+      <div class="ambient-grid"></div>
+      <div class="ambient-light ambient-light-one"></div>
+      <div class="ambient-light ambient-light-two"></div>
+      <div class="ambient-light ambient-light-three"></div>
+      <div class="ambient-stars"></div>
+    </div>
   <section class="hero home-hero container" aria-labelledby="home-title">
-    <div class="hero-orbit" aria-hidden="true"></div>
-    <p class="eyebrow">小站大厅</p>
-    <h1 id="home-title">
-      <span>{site.headline[0]}</span>
-      <span class="second-line">{site.headline[1]}</span>
-    </h1>
-    <p class="hero-description">{site.intro}</p>
-    <div class="home-stats"><ViewCount scope="site" prominent /></div>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow hero-arrive"><span class="home-status-dot" aria-hidden="true"></span>小站大厅 <span class="hero-eyebrow-note">WELCOME TO MY LITTLE WORLD</span></p>
+        <h1 id="home-title" aria-label={site.headline.join('')}>
+          {site.headline.map((line, lineIndex) => <span class:list={['hero-title-line', { 'second-line': lineIndex === 1 }]} aria-hidden="true">{Array.from(line).map((letter, index) => <span class="hero-letter" style={`--letter-delay: ${180 + lineIndex * 210 + index * 38}ms`}>{letter}</span>)}</span>)}
+        </h1>
+        <p class="hero-description hero-arrive">{site.intro}</p>
+        <div class="hero-reading-link hero-arrive"><a class="home-primary-link" href="#journal">开始阅读 <span aria-hidden="true">↗</span></a><span>生活 · 学习 · 作品</span></div>
+        <div class="home-stats hero-arrive"><ViewCount scope="site" prominent /></div>
+      </div>
+      <div class="hero-scene" aria-hidden="true">
+        <div class="scene-halo"></div>
+        <div class="scene-system">
+          <svg class="scene-orbits" viewBox="0 0 440 440" fill="none">
+            <defs><linearGradient id="home-orbit-gradient" x1="80" y1="40" x2="360" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#d4baff"/><stop offset=".5" stop-color="#9be7d6"/><stop offset="1" stop-color="#9786ff"/></linearGradient></defs>
+            <circle class="scene-ring-fine" cx="220" cy="220" r="204" />
+            <circle class="scene-ring-dashed" cx="220" cy="220" r="180" />
+            <circle class="scene-ring-fine" cx="220" cy="220" r="135" />
+            <ellipse class="scene-ellipse" cx="220" cy="220" rx="211" ry="77" transform="rotate(-28 220 220)" />
+            <ellipse class="scene-ellipse scene-ellipse-faint" cx="220" cy="220" rx="199" ry="94" transform="rotate(42 220 220)" />
+            <g class="scene-satellite scene-satellite-one"><circle cx="220" cy="16" r="5" fill="#d4baff"/><circle cx="220" cy="16" r="12" stroke="#d4baff" stroke-opacity=".25"/></g>
+            <g class="scene-satellite scene-satellite-two"><circle cx="220" cy="85" r="4" fill="#9be7d6"/><circle cx="220" cy="85" r="9" stroke="#9be7d6" stroke-opacity=".25"/></g>
+            <g class="scene-crosses" stroke="#c7b5f2"><path d="M55 100h10m-5-5v10M374 307h12m-6-6v12M103 364h8m-4-4v8" /></g>
+          </svg>
+          <div class="scene-core"><span class="scene-core-name">暝</span><span class="scene-core-caption">A LITTLE SPACE</span></div>
+          <span class="scene-label scene-label-life"><i></i>生活的片段</span>
+          <span class="scene-label scene-label-learning"><i></i>一点点进步</span>
+          <span class="scene-label scene-label-work"><i></i>喜欢慢慢成形</span>
+        </div>
+        <p class="scene-bottom-note"><span>✦</span> 记录日常，也收藏灵光。</p>
+      </div>
+    </div>
     <div class="hero-bottom">
       <a class="quiet-link" href="#columns">逛逛五个角落 <span class="arrow" aria-hidden="true">↗</span></a>
-      <span class="hero-note">生活 · 文字 · 一点点喜欢</span>
+      <button class="home-motion-toggle" type="button" data-motion-toggle aria-label="启用页面动态效果" aria-pressed="true" hidden><span class="motion-toggle-icon" aria-hidden="true"></span><span data-motion-label>暂停动效</span></button>
     </div>
   </section>
   <section class="hall-columns home-columns container" id="columns" aria-labelledby="columns-title">
@@ -36,7 +69,7 @@ const catalog = await getCatalog();
       {postColumns.map((column, index) => {
         const count = posts.filter((post) => post.column.slug === column.slug).length;
         return <a class="column-card" href={localPath(columnPath(column))}>
-          <div class="column-card-top"><span class="column-number">{String(index + 1).padStart(2, '0')}</span><span class="column-count">{count} 篇</span></div>
+          <div class="column-card-top"><span class="column-number">{String(index + 1).padStart(2, '0')}<span class="column-symbol" aria-hidden="true">{['✦', '⌘', '◇', '♫', '✳'][index]}</span></span><span class="column-count">{count} 篇</span></div>
           <h3>{column.title}</h3>
           <p>{column.description}</p>
           <span class="column-enter">进去看看 <span aria-hidden="true">↗</span></span>
@@ -63,4 +96,9 @@ const catalog = await getCatalog();
     <span>在这里，慢一点也没关系。</span>
     <div class="journal-more"><a class="quiet-link" href={localPath('guestbook/')}>留一点声音在这里 <span class="arrow" aria-hidden="true">↗</span></a></div>
   </section>
+  </div>
+  <script>
+    import { initHomeMotion } from '../lib/home-motion.mjs';
+    initHomeMotion(document);
+  </script>
 </SiteLayout>

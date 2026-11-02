@@ -71,7 +71,8 @@ const collectionNames = collectionGroups(catalog).map((group) => group.name);
         <button type="button" id="studio-insert-url">插入媒体网址</button>
         <span class="studio-hint">单个文件不超过 20 MB，总计不超过 50 MB。长视频可以使用视频直链。</span>
       </div>
-      <p class="studio-hint">也可以把图片、视频拖到正文框，或粘贴截图。附件会随草稿保存在本机，点击发布后才上传。预览中的图片也可以点击放大。</p>
+      <p class="studio-hint">按一次 Enter 换行，空一行分段。图文可以交替写：先写文字，把光标放到要插图的位置，点击「插入图片 / 视频」；插入后光标会移到媒体后面，直接继续写字即可。也可以拖入文件或粘贴截图。</p>
+      <p class="studio-hint">正文框中显示图片 / 视频的 Markdown 写法，预览区显示实际效果。附件会随草稿保存在本机，点击发布后才上传。预览中的图片可以点击放大。</p>
       <div class="studio-editor-grid">
         <label class="studio-editor-label">写正文<textarea id="studio-body" rows="20" placeholder="写下你的文字……&#10;&#10;选择文件后，图片或视频会插入光标所在的位置。也支持标题、列表和 Markdown 写法。"></textarea></label>
         <section class="studio-preview-panel" aria-label="正文预览"><h2>看看效果</h2><p id="studio-preview-error" role="status" hidden></p><div id="studio-cover-preview" class="prose studio-cover-preview" hidden><img id="studio-cover-image" alt="" /><p>封面预览</p></div><div id="studio-preview" class="prose"><p class="studio-empty">你的文字、图片和视频会显示在这里。</p></div></section>

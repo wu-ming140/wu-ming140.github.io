@@ -5,6 +5,7 @@ import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import remarkGuestbook, { validDate, safeMarkdownUrl } from './guestbook-rules.mjs';
 import remarkMedia from './media.mjs';
+import remarkLineBreaks from './line-breaks.mjs';
 import { normalizeTags, normalizeCover } from './post-meta.mjs';
 import { normalizePlacements, normalizeCollections, availableBoards } from './editorial.mjs';
 import { resolveColumn } from './column-data.mjs';
@@ -102,7 +103,7 @@ export async function renderMarkdown(body, type = 'article') {
       visit(tree);
     };
   }
-  const output = await unified().use(remarkParse).use(remarkGuestbook).use(previewLinks).use(remarkMedia)
+  const output = await unified().use(remarkParse).use(remarkGuestbook).use(previewLinks).use(remarkLineBreaks).use(remarkMedia)
     .use(remarkRehype).use(rehypeStringify).process({ value: body, path });
   return String(output);
 }

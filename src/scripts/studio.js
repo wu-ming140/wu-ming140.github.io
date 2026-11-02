@@ -247,7 +247,7 @@ async function addFiles(files, asCover = false) {
       void preview();
     } else insert(prepared.map((asset) => asset.markdown).join('\n\n'));
     renderAssets();
-    status(asCover ? '已设置封面，会随正文一起保存和发布。' : `已插入 ${prepared.length} 个文件。现在可以预览、下载草稿或发布。`);
+    status(asCover ? '已设置封面，会随正文一起保存和发布。' : `已插入 ${prepared.length} 个文件，光标已放在媒体后面，可以直接继续写字，也可以再插入图片。`);
   } catch (error) { status(errorMessage(error)); }
   finally { mediaPending = false; byId('files').value = ''; byId('cover-file').value = ''; }
 }
@@ -461,9 +461,11 @@ byId('insert-url').addEventListener('click', () => byId('url-dialog').showModal(
 byId('url-form').addEventListener('submit', (event) => {
   event.preventDefault();
   try {
-    insert(mediaMarkdown(byId('url-label').value, byId('url-value').value.trim()));
+    const markdown = mediaMarkdown(byId('url-label').value, byId('url-value').value.trim());
     byId('url-dialog').close();
+    insert(markdown);
     byId('url-form').reset();
+    status('媒体已插入，光标在媒体后面，可以继续写字。');
   } catch (error) { status(errorMessage(error)); byId('url-dialog').close(); }
 });
 for (const button of root.querySelectorAll('[data-close-dialog]')) button.addEventListener('click', () => document.getElementById(button.dataset.closeDialog).close());
